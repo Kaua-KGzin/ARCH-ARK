@@ -1,0 +1,33 @@
+{
+  "name": "@arch-ark/mobile",
+  "version": "1.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@arch-ark/shared": "*",
+    "@react-native-async-storage/async-storage": "^2.1.0",
+    "expo": "~53.0.0",
+    "expo-router": "~4.0.0",
+    "expo-status-bar": "~2.0.0",
+    "lucide-react-native": "^0.475.0",
+    "nativewind": "^4.1.23",
+    "react": "19.0.0",
+    "react-native": "0.79.0",
+    "react-native-safe-area-context": "^5.0.0",
+    "react-native-screens": "^4.0.0",
+    "react-native-svg": "^15.0.0",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/react": "~19.0.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5"
+  }
+}

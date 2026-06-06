@@ -1,8 +1,7 @@
-import { Mission, MissionCategory, Character, Attributes } from '@/types/game'
+import { Mission, MissionCategory, Character, Attributes } from '../types/game'
 import { calculateLevelFromXp, getRankFromLevel } from './utils'
 
 export const XP_REWARDS: Record<string, number> = {
-  // Exercise
   academia: 100,
   corrida: 80,
   caminhada: 30,
@@ -11,20 +10,17 @@ export const XP_REWARDS: Record<string, number> = {
   natacao: 90,
   treino_hiit: 120,
   yoga: 40,
-  // Study
   estudo_30min: 50,
   estudo_1h: 100,
   estudo_2h: 220,
   estudo_3h: 350,
   leitura_30min: 40,
   leitura_1h: 90,
-  // Habits
   agua_2l: 30,
   meditacao: 40,
   dormir_cedo: 35,
   sem_redes: 45,
   diario: 25,
-  // Misc
   missao_diaria: 50,
   missao_semanal: 200,
   missao_mensal: 500,

@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "ARCH ARK",
+    "slug": "arch-ark",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "arch-ark",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#050508",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.archark.app"
+    },
+    "android": {
+      "package": "com.archark.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#050508"
+      }
+    },
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

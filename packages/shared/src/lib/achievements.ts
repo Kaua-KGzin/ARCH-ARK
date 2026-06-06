@@ -1,4 +1,4 @@
-import { Achievement, Character, GameStats } from '@/types/game'
+import { Achievement, Character, GameStats } from '../types/game'
 
 export const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'first-mission', title: 'Primeiro Passo', description: 'Complete sua primeira missão', icon: '🎯', rarity: 'common', xpReward: 50, isUnlocked: false, progress: 0, target: 1 },
@@ -48,7 +48,7 @@ export function checkAchievements(
       case 'level-100': progress = character.level; break
       case 'exercise-10':
       case 'exercise-50':
-      case 'exercise-100': progress = stats.totalMissionsCompleted; break
+      case 'exercise-100': progress = Math.floor(stats.totalExerciseMinutes / 30); break
       case 'study-100h':
       case 'study-500h': progress = stats.totalStudyMinutes; break
       case 'dungeon-1': progress = stats.dungeonsCleared; break
@@ -57,12 +57,6 @@ export function checkAchievements(
     }
 
     isUnlocked = progress >= ach.target
-
-    return {
-      ...ach,
-      progress: Math.min(progress, ach.target),
-      isUnlocked,
-      unlockedAt: isUnlocked && !ach.isUnlocked ? new Date().toISOString() : ach.unlockedAt,
-    }
+    return { ...ach, progress, isUnlocked, unlockedAt: isUnlocked && !ach.isUnlocked ? new Date().toISOString() : ach.unlockedAt }
   })
 }

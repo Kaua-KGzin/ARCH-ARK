@@ -1,6 +1,6 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { Rank, ItemRarity, CharacterClass } from '@/types/game'
+import { Rank, ItemRarity, CharacterClass } from '../types/game'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -53,7 +53,7 @@ export function getRankColor(rank: Rank): string {
     SS: 'text-yellow-300',
     SSS: 'text-amber-300',
     Monarch: 'text-red-400',
-    Legendary: 'text-neon-blue',
+    Legendary: 'text-blue-400',
   }
   return colors[rank]
 }
