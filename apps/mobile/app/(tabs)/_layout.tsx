@@ -44,6 +44,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="inventory"
+        options={{
+          title: 'Inventário',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="🎒" focused={focused} />,
+        }}
+      />
+      <Tabs.Screen
         name="dungeons"
         options={{
           title: 'Masmorras',

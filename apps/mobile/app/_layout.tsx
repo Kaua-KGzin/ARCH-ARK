@@ -4,11 +4,14 @@ import { StatusBar } from 'expo-status-bar'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import '../global.css'
 import { useGameStore } from '../store/useGameStore'
+import RewardToast from '../components/system/RewardToast'
+import RankUpModal from '../components/system/RankUpModal'
 
 export default function RootLayout() {
-  const { isOnboarded, checkDailyReset } = useGameStore()
+  const { isOnboarded, checkDailyReset, ensureStarterLoadout } = useGameStore()
 
   useEffect(() => {
+    ensureStarterLoadout()
     checkDailyReset()
   }, [])
 
@@ -23,6 +26,8 @@ export default function RootLayout() {
         )}
         <Stack.Screen name="ark" options={{ presentation: 'modal' }} />
       </Stack>
+      <RewardToast />
+      <RankUpModal />
     </SafeAreaProvider>
   )
 }

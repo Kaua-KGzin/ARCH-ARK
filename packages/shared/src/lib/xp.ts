@@ -1,4 +1,4 @@
-import { Mission, MissionCategory, Character, Attributes } from '../types/game'
+import { Mission, MissionCategory, Character, Attributes, Equipment } from '../types/game'
 import { calculateLevelFromXp, getRankFromLevel } from './utils'
 
 export const XP_REWARDS: Record<string, number> = {
@@ -44,18 +44,24 @@ export function applyXpGain(
   character: Character
   leveledUp: boolean
   newLevel: number
+  previousLevel: number
+  previousRank: Character['rank']
+  rankChanged: boolean
   attributeGains: Partial<Attributes>
 } {
+  const previousLevel = character.level
+  const previousRank = character.rank
   const newTotalXp = character.totalXp + xpGained
   const { level, currentXp, xpToNextLevel } = calculateLevelFromXp(newTotalXp)
-  const leveledUp = level > character.level
+  const leveledUp = level > previousLevel
   const newRank = getRankFromLevel(level)
+  const rankChanged = newRank !== previousRank
 
   const attributeGains = ATTRIBUTE_GAINS[category]
   const newAttributes = { ...character.attributes }
 
   if (leveledUp) {
-    const levelsGained = level - character.level
+    const levelsGained = level - previousLevel
     Object.entries(attributeGains).forEach(([key, value]) => {
       const attr = key as keyof Attributes
       newAttributes[attr] = (newAttributes[attr] || 0) + (value || 0) * levelsGained
@@ -72,11 +78,55 @@ export function applyXpGain(
     attributes: newAttributes,
   }
 
-  return { character: updatedCharacter, leveledUp, newLevel: level, attributeGains }
+  return {
+    character: updatedCharacter,
+    leveledUp,
+    newLevel: level,
+    previousLevel,
+    previousRank,
+    rankChanged,
+    attributeGains,
+  }
 }
 
-export function calculateSecondaryStats(character: Character) {
-  const { attributes, level } = character
+export function getEquipmentAttributeBonus(equipment: Equipment = {}): Attributes {
+  const bonus: Attributes = {
+    strength: 0,
+    resistance: 0,
+    intelligence: 0,
+    discipline: 0,
+    focus: 0,
+    charisma: 0,
+    vitality: 0,
+  }
+
+  Object.values(equipment).forEach(item => {
+    if (!item?.attributeBonus) return
+    Object.entries(item.attributeBonus).forEach(([key, value]) => {
+      const attr = key as keyof Attributes
+      bonus[attr] += Number(value || 0)
+    })
+  })
+
+  return bonus
+}
+
+export function calculateEffectiveAttributes(character: Character, equipment: Equipment = {}): Attributes {
+  const bonus = getEquipmentAttributeBonus(equipment)
+  return {
+    strength: character.attributes.strength + bonus.strength,
+    resistance: character.attributes.resistance + bonus.resistance,
+    intelligence: character.attributes.intelligence + bonus.intelligence,
+    discipline: character.attributes.discipline + bonus.discipline,
+    focus: character.attributes.focus + bonus.focus,
+    charisma: character.attributes.charisma + bonus.charisma,
+    vitality: character.attributes.vitality + bonus.vitality,
+  }
+}
+
+export function calculateSecondaryStats(character: Character, equipment: Equipment = {}) {
+  const attributes = calculateEffectiveAttributes(character, equipment)
+  const { level } = character
   return {
     maxHp: 100 + attributes.vitality * 10 + attributes.resistance * 5 + level * 5,
     maxMana: 50 + attributes.intelligence * 8 + attributes.focus * 4 + level * 3,

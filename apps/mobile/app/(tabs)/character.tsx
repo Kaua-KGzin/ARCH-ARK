@@ -1,13 +1,16 @@
 import { View, Text, ScrollView } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useGameStore } from '../../store/useGameStore'
-import { calculateSecondaryStats, getClassIcon, formatNumber } from '@arch-ark/shared'
+import { calculateEffectiveAttributes, calculateSecondaryStats, formatNumber, getClassIcon, getEquipmentAttributeBonus } from '@arch-ark/shared'
 import XpBar from '../../components/character/XpBar'
 import AttributeBar from '../../components/character/AttributeBar'
+import EquipmentSlot from '../../components/inventory/EquipmentSlot'
 
 export default function CharacterScreen() {
-  const { character } = useGameStore()
-  const secondary = calculateSecondaryStats(character)
+  const { character, equipment } = useGameStore()
+  const secondary = calculateSecondaryStats(character, equipment)
+  const effectiveAttributes = calculateEffectiveAttributes(character, equipment)
+  const equipmentBonus = getEquipmentAttributeBonus(equipment)
 
   const attrs = [
     { key: 'strength', label: 'Força', max: 100, color: '#f87171' },
@@ -53,11 +56,22 @@ export default function CharacterScreen() {
             <AttributeBar
               key={attr.key}
               label={attr.label}
-              value={character.attributes[attr.key]}
+              value={effectiveAttributes[attr.key]}
               max={attr.max}
               color={attr.color}
+              bonus={equipmentBonus[attr.key]}
             />
           ))}
+        </View>
+
+        {/* Equipment */}
+        <View className="bg-[#0d0d1a] border border-[#1a1a2e] rounded-2xl p-4 mb-4">
+          <Text className="text-white font-bold text-base mb-3">Equipamento Ativo</Text>
+          <View className="flex-row flex-wrap gap-3">
+            {(['head', 'chest', 'gloves', 'legs', 'boots', 'artifact'] as const).map(slot => (
+              <EquipmentSlot key={slot} slot={slot} item={equipment[slot]} />
+            ))}
+          </View>
         </View>
 
         {/* Secondary Stats */}

@@ -1,6 +1,8 @@
-import { View, Text, TouchableOpacity } from 'react-native'
+import { useRef } from 'react'
+import { Animated, View, Text, TouchableOpacity } from 'react-native'
 import { Mission } from '@arch-ark/shared'
 import { useGameStore } from '../../store/useGameStore'
+import { triggerSystemFeedback } from '../../lib/systemFeedback'
 
 const DIFFICULTY_COLORS: Record<string, string> = {
   E: 'text-gray-400',
@@ -19,12 +21,23 @@ export default function MissionCard({ mission }: Props) {
   const { completeMission } = useGameStore()
   const isCompleted = mission.status === 'completed'
   const progress = mission.target > 1 ? Math.min(100, (mission.progress / mission.target) * 100) : 0
+  const scale = useRef(new Animated.Value(1)).current
+
+  function handleComplete() {
+    triggerSystemFeedback('mission')
+    Animated.sequence([
+      Animated.timing(scale, { toValue: 0.98, duration: 80, useNativeDriver: true }),
+      Animated.spring(scale, { toValue: 1, useNativeDriver: true, friction: 4 }),
+    ]).start()
+    completeMission(mission.id)
+  }
 
   return (
-    <View
+    <Animated.View
       className={`bg-[#0d0d1a] border rounded-xl p-3 mb-2 ${
         isCompleted ? 'border-green-600/30 opacity-60' : 'border-[#1a1a2e]'
       }`}
+      style={{ transform: [{ scale }] }}
     >
       <View className="flex-row items-start gap-3">
         <Text className="text-2xl">{mission.icon}</Text>
@@ -61,7 +74,7 @@ export default function MissionCard({ mission }: Props) {
 
         {!isCompleted && (
           <TouchableOpacity
-            onPress={() => completeMission(mission.id)}
+            onPress={handleComplete}
             className="bg-blue-600 rounded-lg px-3 py-1.5 self-center"
           >
             <Text className="text-white text-xs font-bold">✓</Text>
@@ -72,6 +85,6 @@ export default function MissionCard({ mission }: Props) {
           <Text className="text-green-400 text-lg self-center">✓</Text>
         )}
       </View>
-    </View>
+    </Animated.View>
   )
 }

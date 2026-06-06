@@ -2,19 +2,18 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
 import { router } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useGameStore } from '../../store/useGameStore'
-import { calculateSecondaryStats, xpBarPercent, formatNumber, getRankColor, getClassColor } from '@arch-ark/shared'
-import XpBar from '../../components/character/XpBar'
+import { calculateSecondaryStats } from '@arch-ark/shared'
+import HunterCard from '../../components/character/HunterCard'
 import MissionCard from '../../components/missions/MissionCard'
 
 export default function DashboardScreen() {
-  const { character, missions, stats, achievements, dungeons, clearLevelUpNotification, levelUpNotification } = useGameStore()
-  const secondary = calculateSecondaryStats(character)
+  const { character, missions, achievements, equipment } = useGameStore()
+  const secondary = calculateSecondaryStats(character, equipment)
 
   const dailyMissions = missions.filter(m => m.type === 'daily').slice(0, 3)
   const completedToday = missions.filter(m => m.type === 'daily' && m.status === 'completed').length
   const totalDaily = missions.filter(m => m.type === 'daily').length
   const unlockedAchievements = achievements.filter(a => a.isUnlocked).length
-  const activeDungeons = dungeons.filter(d => d.isActive && !d.isCompleted).length
 
   return (
     <SafeAreaView className="flex-1 bg-[#050508]">
@@ -34,25 +33,7 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Character Card */}
-        <View className="bg-[#0d0d1a] border border-[#1a1a2e] rounded-2xl p-4 mb-4">
-          <View className="flex-row items-center gap-4 mb-3">
-            <View className="w-16 h-16 rounded-2xl bg-blue-900/50 border-2 border-blue-500/30 items-center justify-center">
-              <Text className="text-3xl">{character.avatar}</Text>
-            </View>
-            <View className="flex-1">
-              <View className="flex-row items-center gap-2 mb-1">
-                <Text className="text-lg font-black text-white">{character.class}</Text>
-                <View className="bg-gray-800 border border-gray-600 rounded-full px-2 py-0.5">
-                  <Text className="text-xs font-black text-gray-300">Rank {character.rank}</Text>
-                </View>
-              </View>
-              <Text className="text-gray-400 text-sm">Nível {character.level} • {formatNumber(character.totalXp)} XP total</Text>
-              <Text className="text-yellow-400 text-sm font-bold">💰 {character.gold} ouro</Text>
-            </View>
-          </View>
-          <XpBar current={character.currentXp} max={character.xpToNextLevel} level={character.level} />
-        </View>
+        <HunterCard character={character} equipment={equipment} />
 
         {/* Quick Stats */}
         <View className="flex-row gap-3 mb-4">

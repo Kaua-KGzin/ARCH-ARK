@@ -10,5 +10,8 @@
     "mobile": "npm run start --workspace=apps/mobile",
     "build:web": "npm run build --workspace=apps/web",
     "install:all": "npm install"
+  },
+  "devDependencies": {
+    "ajv": "^8.20.0"
   }
 }

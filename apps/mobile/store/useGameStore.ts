@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
   Character, CharacterClass, Mission, Item, InventoryItem,
   Equipment, Achievement, Dungeon, Boss, ArkMessage, GameStats,
+  Attributes,
 } from '@arch-ark/shared'
 import { applyXpGain, getStreakBonus } from '@arch-ark/shared'
 import {
@@ -11,7 +12,11 @@ import {
   generateMonthlyMissions, generateDungeons, generateBosses,
 } from '@arch-ark/shared'
 import { checkAchievements, ALL_ACHIEVEMENTS } from '@arch-ark/shared'
-import { calculateLevelFromXp, getRankFromLevel, generateId, isToday } from '@arch-ark/shared'
+import { getRankFromLevel, generateId, isToday } from '@arch-ark/shared'
+import { createInventoryItem, createStarterLoadout } from '@arch-ark/shared'
+
+const initialCreatedAt = new Date().toISOString()
+const STARTER_LOADOUT = createStarterLoadout(initialCreatedAt)
 
 const DEFAULT_CHARACTER: Character = {
   id: generateId(),
@@ -26,11 +31,33 @@ const DEFAULT_CHARACTER: Character = {
   rankPoints: 0,
   attributes: { strength: 5, resistance: 5, intelligence: 5, discipline: 5, focus: 5, charisma: 5, vitality: 5 },
   title: 'Iniciante',
-  createdAt: new Date().toISOString(),
+  createdAt: initialCreatedAt,
   streak: 0,
   longestStreak: 0,
   lastActivityDate: null,
   gold: 100,
+}
+
+export interface LevelUpNotification {
+  show: boolean
+  playerName: string
+  previousLevel: number
+  level: number
+  previousRank: string
+  rank: string
+  rankChanged: boolean
+  xpGained: number
+  goldGained: number
+  attributeGains: Partial<Attributes>
+}
+
+export interface RewardNotification {
+  id: string
+  type: 'achievement' | 'loot' | 'boss' | 'rank-up' | 'level-up'
+  title: string
+  description: string
+  icon: string
+  rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
 }
 
 interface GameState {
@@ -45,8 +72,9 @@ interface GameState {
   stats: GameStats
   isOnboarded: boolean
   lastDailyReset: string | null
-  levelUpNotification: { show: boolean; level: number; rank: string } | null
+  levelUpNotification: LevelUpNotification | null
   achievementNotification: Achievement | null
+  rewardNotifications: RewardNotification[]
 
   setupCharacter: (name: string, cls: CharacterClass) => void
   completeMission: (missionId: string) => void
@@ -58,8 +86,10 @@ interface GameState {
   addToInventory: (item: Item) => void
   addArkMessage: (message: ArkMessage) => void
   checkDailyReset: () => void
+  ensureStarterLoadout: () => void
   clearLevelUpNotification: () => void
   clearAchievementNotification: () => void
+  dismissRewardNotification: (id: string) => void
   activateDungeon: (dungeonId: string) => void
   completeDungeonMission: (dungeonId: string, missionId: string) => void
 }
@@ -73,8 +103,8 @@ export const useGameStore = create<GameState>()(
         ...generateWeeklyMissions(),
         ...generateMonthlyMissions(),
       ],
-      inventory: [],
-      equipment: {},
+      inventory: STARTER_LOADOUT.inventory,
+      equipment: STARTER_LOADOUT.equipment,
       achievements: ALL_ACHIEVEMENTS,
       dungeons: generateDungeons() as Dungeon[],
       bosses: generateBosses() as Boss[],
@@ -94,6 +124,7 @@ export const useGameStore = create<GameState>()(
       lastDailyReset: null,
       levelUpNotification: null,
       achievementNotification: null,
+      rewardNotifications: [],
 
       setupCharacter: (name, cls) => {
         const classAttributes: Record<CharacterClass, Partial<Character['attributes']>> = {
@@ -129,7 +160,15 @@ export const useGameStore = create<GameState>()(
         const xpEarned = Math.floor(mission.xpReward * bonusMultiplier)
         const goldEarned = mission.goldReward
 
-        const { character: updatedChar, leveledUp, newLevel } = applyXpGain(
+        const {
+          character: updatedChar,
+          leveledUp,
+          newLevel,
+          previousLevel,
+          previousRank,
+          rankChanged,
+          attributeGains,
+        } = applyXpGain(
           state.character, xpEarned, mission.category
         )
 
@@ -166,9 +205,19 @@ export const useGameStore = create<GameState>()(
         )
 
         let newInventory = [...state.inventory]
+        const rewardNotifications: RewardNotification[] = []
         if (mission.itemReward) {
-          newInventory = [...newInventory, { ...mission.itemReward, acquiredAt: today, isEquipped: false }]
+          const item = createInventoryItem(mission.itemReward, today)
+          newInventory = [...newInventory, item]
           newStats.itemsCollected++
+          rewardNotifications.push({
+            id: generateId(),
+            type: 'loot',
+            title: 'Loot adquirido',
+            description: item.name,
+            icon: item.icon,
+            rarity: item.rarity,
+          })
         }
 
         const updatedAchievements = checkAchievements(finalChar, newStats, state.achievements)
@@ -176,14 +225,50 @@ export const useGameStore = create<GameState>()(
           (a, i) => a.isUnlocked && !state.achievements[i].isUnlocked
         )
 
+        if (newlyUnlocked) {
+          rewardNotifications.push({
+            id: generateId(),
+            type: 'achievement',
+            title: 'Conquista desbloqueada',
+            description: newlyUnlocked.title,
+            icon: newlyUnlocked.icon,
+            rarity: newlyUnlocked.rarity,
+          })
+        }
+
+        if (leveledUp) {
+          rewardNotifications.push({
+            id: generateId(),
+            type: rankChanged ? 'rank-up' : 'level-up',
+            title: rankChanged ? 'Rank aumentado' : 'Nível aumentado',
+            description: rankChanged
+              ? `Rank ${previousRank} → ${getRankFromLevel(newLevel)}`
+              : `Nível ${previousLevel} → ${newLevel}`,
+            icon: rankChanged ? '⚡' : '⬆️',
+            rarity: rankChanged ? 'epic' : 'rare',
+          })
+        }
+
         set({
           character: finalChar,
           missions: updatedMissions,
           inventory: newInventory,
           stats: newStats,
           achievements: updatedAchievements,
-          levelUpNotification: leveledUp ? { show: true, level: newLevel, rank: getRankFromLevel(newLevel) } : state.levelUpNotification,
+          levelUpNotification: leveledUp ? {
+            show: true,
+            playerName: finalChar.name,
+            previousLevel,
+            level: newLevel,
+            previousRank,
+            rank: getRankFromLevel(newLevel),
+            rankChanged,
+            xpGained: xpEarned,
+            goldGained: goldEarned,
+            attributeGains,
+          } : state.levelUpNotification,
           achievementNotification: newlyUnlocked || state.achievementNotification,
+          rewardNotifications: [...state.rewardNotifications, ...rewardNotifications],
         })
       },
 
@@ -199,10 +284,29 @@ export const useGameStore = create<GameState>()(
 
       addXp: (amount, category) => {
         const state = get()
-        const { character: updatedChar, leveledUp, newLevel } = applyXpGain(state.character, amount, category)
+        const {
+          character: updatedChar,
+          leveledUp,
+          newLevel,
+          previousLevel,
+          previousRank,
+          rankChanged,
+          attributeGains,
+        } = applyXpGain(state.character, amount, category)
         set({
           character: updatedChar,
-          levelUpNotification: leveledUp ? { show: true, level: newLevel, rank: getRankFromLevel(newLevel) } : state.levelUpNotification,
+          levelUpNotification: leveledUp ? {
+            show: true,
+            playerName: updatedChar.name,
+            previousLevel,
+            level: newLevel,
+            previousRank,
+            rank: getRankFromLevel(newLevel),
+            rankChanged,
+            xpGained: amount,
+            goldGained: 0,
+            attributeGains,
+          } : state.levelUpNotification,
         })
       },
 
@@ -233,7 +337,7 @@ export const useGameStore = create<GameState>()(
 
       addToInventory: (item) => {
         set(state => ({
-          inventory: [...state.inventory, { ...item, acquiredAt: new Date().toISOString(), isEquipped: false }],
+          inventory: [...state.inventory, createInventoryItem(item)],
           stats: { ...state.stats, itemsCollected: state.stats.itemsCollected + 1 },
         }))
       },
@@ -253,8 +357,26 @@ export const useGameStore = create<GameState>()(
         set({ missions: [...newDailies, ...nonDailies], lastDailyReset: today })
       },
 
+      ensureStarterLoadout: () => {
+        const state = get()
+        const hasChestEquipment = Boolean(state.equipment.chest)
+        const hasChestInventory = state.inventory.some(i => i.slot === 'chest')
+        if (hasChestEquipment || hasChestInventory) return
+
+        const starter = createStarterLoadout()
+        set({
+          inventory: [...starter.inventory, ...state.inventory],
+          equipment: { ...state.equipment, ...starter.equipment },
+        })
+      },
+
       clearLevelUpNotification: () => set({ levelUpNotification: null }),
       clearAchievementNotification: () => set({ achievementNotification: null }),
+      dismissRewardNotification: (id) => {
+        set(state => ({
+          rewardNotifications: state.rewardNotifications.filter(n => n.id !== id),
+        }))
+      },
 
       activateDungeon: (dungeonId) => {
         set(state => ({
