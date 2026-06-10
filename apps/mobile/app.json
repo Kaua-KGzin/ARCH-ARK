@@ -17,9 +17,19 @@
         "backgroundColor": "#050508"
       }
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      "expo-audio"
+    ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "838ffcf0-3c88-4842-ac63-fbafb85715c8"
+      }
+    },
+    "owner": "kgzin767"
   }
 }
