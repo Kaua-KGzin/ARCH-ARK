@@ -15,7 +15,8 @@
       "package": "com.archark.app",
       "adaptiveIcon": {
         "backgroundColor": "#050508"
-      }
+      },
+      "newArchEnabled": false
     },
     "plugins": [
       "expo-router",
