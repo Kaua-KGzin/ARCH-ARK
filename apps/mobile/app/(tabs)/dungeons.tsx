@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View, Text, ScrollView, TouchableOpacity, Animated } from 'react-native'
+import { View, Text, ScrollView, TouchableOpacity } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useGameStore } from '../../store/useGameStore'
 import { triggerSystemFeedback } from '../../lib/systemFeedback'
@@ -261,7 +261,7 @@ export default function DungeonsScreen() {
 
   const activeDungeons = dungeons.filter(d => !d.isCompleted)
   const completedDungeons = dungeons.filter(d => d.isCompleted)
-  const activeBosse = bosses.filter(b => !b.isDefeated)
+  const activeBosses = bosses.filter(b => !b.isDefeated)
   const defeatedBosses = bosses.filter(b => b.isDefeated)
 
   return (
@@ -277,7 +277,7 @@ export default function DungeonsScreen() {
       <View className="flex-row px-4 mb-4 gap-2">
         {([
           { key: 'dungeons', label: '🏰 Masmorras', count: activeDungeons.length },
-          { key: 'bosses', label: '💀 Bosses', count: activeBosse.length },
+          { key: 'bosses', label: '💀 Bosses', count: activeBosses.length },
         ] as const).map(tab => (
           <TouchableOpacity
             key={tab.key}
@@ -321,7 +321,7 @@ export default function DungeonsScreen() {
           </>
         ) : (
           <>
-            {activeBosse.map(b => <BossCard key={b.id} boss={b} />)}
+            {activeBosses.map(b => <BossCard key={b.id} boss={b} />)}
             {defeatedBosses.length > 0 && (
               <>
                 <Text className="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2 mt-2">
@@ -330,7 +330,7 @@ export default function DungeonsScreen() {
                 {defeatedBosses.map(b => <BossCard key={b.id} boss={b} />)}
               </>
             )}
-            {activeBosse.length === 0 && defeatedBosses.length === 0 && (
+            {activeBosses.length === 0 && defeatedBosses.length === 0 && (
               <View className="items-center py-16">
                 <Text className="text-4xl mb-3">💀</Text>
                 <Text className="text-gray-400">Nenhum boss disponível</Text>
