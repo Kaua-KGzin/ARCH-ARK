@@ -92,6 +92,7 @@ interface GameState {
   dismissRewardNotification: (id: string) => void
   activateDungeon: (dungeonId: string) => void
   completeDungeonMission: (dungeonId: string, missionId: string) => void
+  completeBossMission: (bossId: string, missionId: string) => void
 }
 
 export const useGameStore = create<GameState>()(
@@ -386,6 +387,11 @@ export const useGameStore = create<GameState>()(
 
       completeDungeonMission: (dungeonId, missionId) => {
         set(state => {
+          const dungeon = state.dungeons.find(d => d.id === dungeonId)
+          if (!dungeon) return state
+          const mission = dungeon.missions.find(m => m.id === missionId)
+          if (!mission || mission.status === 'completed') return state
+
           const updatedDungeons = state.dungeons.map(d => {
             if (d.id !== dungeonId) return d
             const updatedMissions = d.missions.map(m =>
@@ -395,13 +401,129 @@ export const useGameStore = create<GameState>()(
             return { ...d, missions: updatedMissions, isCompleted: allDone, progress: updatedMissions.filter(m => m.status === 'completed').length }
           })
 
-          const dungeon = updatedDungeons.find(d => d.id === dungeonId)
-          const wasCompleted = state.dungeons.find(d => d.id === dungeonId)?.isCompleted
-          const newStats = dungeon?.isCompleted && !wasCompleted
-            ? { ...state.stats, dungeonsCleared: state.stats.dungeonsCleared + 1 }
-            : state.stats
+          const updatedDungeon = updatedDungeons.find(d => d.id === dungeonId)!
+          const wasCompleted = dungeon.isCompleted
 
-          return { dungeons: updatedDungeons, stats: newStats }
+          if (!updatedDungeon.isCompleted || wasCompleted) {
+            return { dungeons: updatedDungeons }
+          }
+
+          const { character: updatedChar, leveledUp, newLevel, previousLevel, previousRank, rankChanged, attributeGains } = applyXpGain(state.character, updatedDungeon.xpReward, 'dungeon')
+          const finalChar = { ...updatedChar, gold: updatedChar.gold + updatedDungeon.goldReward }
+
+          const rewardNotifications: RewardNotification[] = [{
+            id: generateId(),
+            type: 'level-up',
+            title: 'Masmorra Concluída!',
+            description: `${updatedDungeon.name} — +${updatedDungeon.xpReward} XP`,
+            icon: '🏰',
+            rarity: 'epic' as const,
+          }]
+
+          let newInventory = [...state.inventory]
+          updatedDungeon.itemRewards.forEach(item => {
+            newInventory = [...newInventory, createInventoryItem(item, new Date().toISOString())]
+            rewardNotifications.push({
+              id: generateId(),
+              type: 'loot',
+              title: 'Recompensa de Masmorra',
+              description: item.name,
+              icon: item.icon,
+              rarity: item.rarity,
+            })
+          })
+
+          return {
+            dungeons: updatedDungeons,
+            character: finalChar,
+            inventory: newInventory,
+            stats: { ...state.stats, dungeonsCleared: state.stats.dungeonsCleared + 1 },
+            levelUpNotification: leveledUp ? {
+              show: true,
+              playerName: finalChar.name,
+              previousLevel,
+              level: newLevel,
+              previousRank,
+              rank: getRankFromLevel(newLevel),
+              rankChanged,
+              xpGained: updatedDungeon.xpReward,
+              goldGained: updatedDungeon.goldReward,
+              attributeGains,
+            } : state.levelUpNotification,
+            rewardNotifications: [...state.rewardNotifications, ...rewardNotifications],
+          }
+        })
+      },
+
+      completeBossMission: (bossId, missionId) => {
+        set(state => {
+          const boss = state.bosses.find(b => b.id === bossId)
+          if (!boss) return state
+          const mission = boss.missions.find(m => m.id === missionId)
+          if (!mission || mission.status === 'completed') return state
+
+          const updatedBosses = state.bosses.map(b => {
+            if (b.id !== bossId) return b
+            const updatedMissions = b.missions.map(m =>
+              m.id === missionId ? { ...m, status: 'completed' as const } : m
+            )
+            const completedCount = updatedMissions.filter(m => m.status === 'completed').length
+            const hpPerMission = b.maxHp / b.missions.length
+            const newHp = Math.max(0, b.maxHp - completedCount * hpPerMission)
+            const allDone = updatedMissions.every(m => m.status === 'completed')
+            return { ...b, missions: updatedMissions, hp: newHp, isDefeated: allDone }
+          })
+
+          const updatedBoss = updatedBosses.find(b => b.id === bossId)!
+          const wasDefeated = boss.isDefeated
+
+          if (!updatedBoss.isDefeated || wasDefeated) {
+            return { bosses: updatedBosses }
+          }
+
+          const { character: updatedChar, leveledUp, newLevel, previousLevel, previousRank, rankChanged, attributeGains } = applyXpGain(state.character, updatedBoss.xpReward, 'boss')
+          const finalChar = { ...updatedChar, gold: updatedChar.gold + updatedBoss.goldReward }
+
+          const newInventory = [...state.inventory, createInventoryItem(updatedBoss.itemReward, new Date().toISOString())]
+
+          const rewardNotifications: RewardNotification[] = [
+            {
+              id: generateId(),
+              type: 'boss',
+              title: `Boss Derrotado: ${updatedBoss.name}`,
+              description: `+${updatedBoss.xpReward} XP · +${updatedBoss.goldReward} Ouro`,
+              icon: updatedBoss.icon,
+              rarity: 'legendary' as const,
+            },
+            {
+              id: generateId(),
+              type: 'loot',
+              title: 'Loot Épico',
+              description: updatedBoss.itemReward.name,
+              icon: updatedBoss.itemReward.icon,
+              rarity: updatedBoss.itemReward.rarity,
+            },
+          ]
+
+          return {
+            bosses: updatedBosses,
+            character: finalChar,
+            inventory: newInventory,
+            stats: { ...state.stats, bossesDefeated: state.stats.bossesDefeated + 1 },
+            levelUpNotification: leveledUp ? {
+              show: true,
+              playerName: finalChar.name,
+              previousLevel,
+              level: newLevel,
+              previousRank,
+              rank: getRankFromLevel(newLevel),
+              rankChanged,
+              xpGained: updatedBoss.xpReward,
+              goldGained: updatedBoss.goldReward,
+              attributeGains,
+            } : state.levelUpNotification,
+            rewardNotifications: [...state.rewardNotifications, ...rewardNotifications],
+          }
         })
       },
     }),

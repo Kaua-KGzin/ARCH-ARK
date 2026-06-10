@@ -15,9 +15,10 @@ const DIFFICULTY_COLORS: Record<string, string> = {
 
 interface Props {
   mission: Mission
+  onProgressPress?: () => void
 }
 
-export default function MissionCard({ mission }: Props) {
+export default function MissionCard({ mission, onProgressPress }: Props) {
   const { completeMission } = useGameStore()
   const isCompleted = mission.status === 'completed'
   const progress = mission.target > 1 ? Math.min(100, (mission.progress / mission.target) * 100) : 0
@@ -61,14 +62,24 @@ export default function MissionCard({ mission }: Props) {
           </View>
 
           {mission.target > 1 && !isCompleted && (
-            <View className="mt-2">
+            <TouchableOpacity
+              onPress={onProgressPress}
+              disabled={!onProgressPress}
+              className="mt-2"
+              activeOpacity={onProgressPress ? 0.7 : 1}
+            >
               <View className="h-1 bg-[#1a1a2e] rounded-full overflow-hidden">
                 <View className="h-full bg-blue-500 rounded-full" style={{ width: `${progress}%` }} />
               </View>
-              <Text className="text-gray-500 text-xs mt-0.5">
-                {mission.progress}/{mission.target} {mission.unit}
-              </Text>
-            </View>
+              <View className="flex-row items-center justify-between mt-0.5">
+                <Text className="text-gray-500 text-xs">
+                  {mission.progress}/{mission.target} {mission.unit}
+                </Text>
+                {onProgressPress && (
+                  <Text className="text-blue-500 text-xs font-bold">+ Adicionar</Text>
+                )}
+              </View>
+            </TouchableOpacity>
           )}
         </View>
 
