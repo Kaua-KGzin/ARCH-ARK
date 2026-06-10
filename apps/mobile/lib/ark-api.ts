@@ -2,7 +2,7 @@ import { Character, Mission, GameStats, ArkMessage } from '@arch-ark/shared'
 import { generateId } from '@arch-ark/shared'
 
 const OPENROUTER_API_KEY = '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'
-const MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free'
+const MODEL = 'nvidia/nemotron-3-super-120b-a12b:free'
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
 function buildSystemPrompt(character: Character, missions: Mission[], stats: GameStats): string {
@@ -84,7 +84,7 @@ export async function callArkAPI(
         ...historyMessages,
         { role: 'user', content: userMessage },
       ],
-      max_tokens: 300,
+      max_tokens: 600,
       temperature: 0.82,
     }),
   })
