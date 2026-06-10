@@ -11,6 +11,9 @@ const CATEGORY_COLORS: Record<Mission['category'], string> = {
   habit: 'text-green-400',
   dungeon: 'text-purple-400',
   boss: 'text-orange-400',
+  task: 'text-cyan-400',
+  nutrition: 'text-lime-400',
+  mindfulness: 'text-violet-400',
 }
 
 const DIFFICULTY_COLORS: Record<string, string> = {

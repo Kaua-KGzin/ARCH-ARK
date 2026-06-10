@@ -5,7 +5,7 @@ import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import MissionCard from '@/components/missions/MissionCard'
 import { cn } from '@/lib/utils'
-import { MissionType } from '@/types/game'
+import { MissionType, MissionCategory, MissionDifficulty } from '@/types/game'
 
 const TABS: { id: MissionType | 'all'; label: string; icon: string }[] = [
   { id: 'all', label: 'Todas', icon: '📋' },
@@ -19,13 +19,205 @@ const CATEGORIES = [
   { id: 'exercise', label: 'Exercício', icon: '💪' },
   { id: 'study', label: 'Estudo', icon: '📚' },
   { id: 'habit', label: 'Hábito', icon: '🌱' },
+  { id: 'task', label: 'Tarefa', icon: '✅' },
 ]
 
+const CATEGORY_OPTIONS: { value: MissionCategory; label: string; icon: string }[] = [
+  { value: 'exercise', label: 'Exercício', icon: '🏋️' },
+  { value: 'study', label: 'Estudo', icon: '📚' },
+  { value: 'habit', label: 'Hábito', icon: '⭐' },
+  { value: 'task', label: 'Tarefa', icon: '✅' },
+  { value: 'nutrition', label: 'Nutrição', icon: '🥗' },
+  { value: 'mindfulness', label: 'Mindfulness', icon: '🧘' },
+]
+
+const DIFFICULTIES: MissionDifficulty[] = ['E', 'D', 'C', 'B', 'A', 'S']
+const DIFFICULTY_COLORS: Record<string, string> = {
+  E: 'text-gray-400', D: 'text-green-400', C: 'text-blue-400',
+  B: 'text-purple-400', A: 'text-orange-400', S: 'text-yellow-400',
+}
+const XP_MAP: Record<MissionDifficulty, number> = { E: 30, D: 60, C: 120, B: 200, A: 350, S: 500 }
+const GOLD_MAP: Record<MissionDifficulty, number> = { E: 10, D: 20, C: 40, B: 70, A: 120, S: 200 }
+
+function CreateMissionModal({ onClose }: { onClose: () => void }) {
+  const { createCustomMission } = useGameStore()
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState<MissionCategory>('task')
+  const [type, setType] = useState<MissionType>('daily')
+  const [difficulty, setDifficulty] = useState<MissionDifficulty>('D')
+  const [target, setTarget] = useState('1')
+  const [unit, setUnit] = useState('vez')
+
+  const catIcon = CATEGORY_OPTIONS.find(c => c.value === category)?.icon ?? '✅'
+
+  function handleCreate() {
+    if (!title.trim()) return
+    createCustomMission({
+      title: title.trim(),
+      description: description.trim() || 'Missão personalizada',
+      category,
+      type,
+      icon: catIcon,
+      xpReward: XP_MAP[difficulty],
+      goldReward: GOLD_MAP[difficulty],
+      target: Math.max(1, parseInt(target, 10) || 1),
+      unit: unit.trim() || 'vez',
+      difficulty,
+    })
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-[#0d0d1a] border border-[#1a1a2e] rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-white font-black text-xl">⚔️ Nova Missão</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-white text-xl">✕</button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1.5">Título *</label>
+            <input
+              className="w-full bg-[#080812] border border-[#1a1a2e] rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/60"
+              placeholder="Nome da missão"
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1.5">Descrição</label>
+            <input
+              className="w-full bg-[#080812] border border-[#1a1a2e] rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/60"
+              placeholder="Detalhes opcionais"
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1.5">Categoria</label>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORY_OPTIONS.map(cat => (
+                <button
+                  key={cat.value}
+                  onClick={() => setCategory(cat.value)}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all',
+                    category === cat.value
+                      ? 'bg-blue-900/50 border-blue-500/60 text-blue-300'
+                      : 'bg-[#080812] border-[#1a1a2e] text-gray-500 hover:text-gray-300'
+                  )}
+                >
+                  {cat.icon} {cat.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1.5">Tipo</label>
+            <div className="flex gap-2">
+              {(['daily', 'weekly', 'monthly'] as MissionType[]).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setType(t)}
+                  className={cn(
+                    'flex-1 py-2 rounded-xl text-xs font-bold border transition-all',
+                    type === t
+                      ? 'bg-cyan-900/50 border-cyan-500/60 text-cyan-300'
+                      : 'bg-[#080812] border-[#1a1a2e] text-gray-500 hover:text-gray-300'
+                  )}
+                >
+                  {t === 'daily' ? 'Diária' : t === 'weekly' ? 'Semanal' : 'Mensal'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1.5">Dificuldade</label>
+            <div className="flex gap-1.5">
+              {DIFFICULTIES.map(d => (
+                <button
+                  key={d}
+                  onClick={() => setDifficulty(d)}
+                  className={cn(
+                    'flex-1 py-2 rounded-xl text-xs font-black border transition-all',
+                    difficulty === d
+                      ? `bg-[#1a1a2e] border-blue-500/60 ${DIFFICULTY_COLORS[d]}`
+                      : 'bg-[#080812] border-[#1a1a2e] text-gray-600 hover:text-gray-400'
+                  )}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1.5">Meta</label>
+              <input
+                type="number"
+                min="1"
+                className="w-full bg-[#080812] border border-[#1a1a2e] rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/60"
+                value={target}
+                onChange={e => setTarget(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-gray-500 text-xs font-bold uppercase tracking-widest block mb-1.5">Unidade</label>
+              <input
+                className="w-full bg-[#080812] border border-[#1a1a2e] rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/60"
+                placeholder="vez, min, km..."
+                value={unit}
+                onChange={e => setUnit(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-3 bg-[#080812] border border-[#1a1a2e] rounded-xl px-4 py-3 text-sm">
+            <span className="text-gray-400">Recompensa:</span>
+            <span className="text-blue-400 font-bold">+{XP_MAP[difficulty]} XP</span>
+            <span className="text-yellow-400 font-bold">+{GOLD_MAP[difficulty]} ouro</span>
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2.5 rounded-xl border border-[#1a1a2e] text-gray-400 hover:text-white text-sm font-bold transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleCreate}
+              disabled={!title.trim()}
+              className={cn(
+                'flex-1 py-2.5 rounded-xl text-sm font-bold transition-all',
+                title.trim()
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                  : 'bg-[#1a1a2e] text-gray-600 cursor-not-allowed'
+              )}
+            >
+              ⚔️ Criar Missão
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function MissionsPage() {
-  const { missions } = useGameStore()
+  const { missions, deleteCustomMission } = useGameStore()
   const [activeTab, setActiveTab] = useState<MissionType | 'all'>('all')
   const [activeCategory, setActiveCategory] = useState('all')
   const [showCompleted, setShowCompleted] = useState(false)
+  const [showCreate, setShowCreate] = useState(false)
 
   const filtered = missions.filter(m => {
     if (m.type === 'dungeon' || m.type === 'boss') return false
@@ -59,18 +251,22 @@ export default function MissionsPage() {
           </div>
         </div>
 
-        {/* Custom Mission */}
-        <div className="card border-dashed border-[#1a1a2e] flex items-center justify-between">
+        {/* Custom Mission CTA */}
+        <div className="card border-dashed border-blue-500/20 flex items-center justify-between">
           <div>
-            <div className="text-white font-semibold text-sm">Adicionar Missão Personalizada</div>
-            <div className="text-gray-500 text-xs">Em breve</div>
+            <div className="text-white font-semibold text-sm">Missão Personalizada</div>
+            <div className="text-gray-500 text-xs">Crie sua própria missão com recompensas personalizadas</div>
           </div>
-          <button className="btn-secondary text-sm opacity-50 cursor-not-allowed" disabled>+ Nova Missão</button>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="btn-secondary text-sm hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all"
+          >
+            + Nova Missão
+          </button>
         </div>
 
         {/* Filters */}
         <div className="flex flex-col gap-3">
-          {/* Type tabs */}
           <div className="flex gap-2 flex-wrap">
             {TABS.map(tab => (
               <button
@@ -99,7 +295,6 @@ export default function MissionsPage() {
             </button>
           </div>
 
-          {/* Category filter */}
           <div className="flex gap-2">
             {CATEGORIES.map(cat => (
               <button
@@ -124,10 +319,23 @@ export default function MissionsPage() {
             <div className="card text-center py-12">
               <div className="text-4xl mb-3">📭</div>
               <div className="text-gray-400 font-semibold">Nenhuma missão encontrada</div>
-              <div className="text-gray-600 text-sm mt-1">Ajuste os filtros ou aguarde o reset diário</div>
+              <div className="text-gray-600 text-sm mt-1">Ajuste os filtros ou crie uma missão personalizada</div>
             </div>
           ) : (
-            filtered.map(m => <MissionCard key={m.id} mission={m} />)
+            filtered.map(m => (
+              <div key={m.id} className="relative group">
+                <MissionCard mission={m} />
+                {m.id.startsWith('custom-') && (
+                  <button
+                    onClick={() => deleteCustomMission(m.id)}
+                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 text-red-500/70 hover:text-red-400 text-xs transition-all"
+                    title="Excluir missão personalizada"
+                  >
+                    🗑 excluir
+                  </button>
+                )}
+              </div>
+            ))
           )}
         </div>
 
@@ -149,6 +357,8 @@ export default function MissionsPage() {
           </div>
         </div>
       </div>
+
+      {showCreate && <CreateMissionModal onClose={() => setShowCreate(false)} />}
     </GameLayout>
   )
 }

@@ -10,6 +10,7 @@ import { applyXpGain, getStreakBonus } from '@/lib/xp'
 import { generateDailyMissions, generateWeeklyMissions, generateMonthlyMissions, generateDungeons, generateBosses } from '@/lib/missions'
 import { checkAchievements, ALL_ACHIEVEMENTS } from '@/lib/achievements'
 import { calculateLevelFromXp, getRankFromLevel, generateId, isToday } from '@/lib/utils'
+import { createInventoryItem, SHOP_ITEMS } from '@/lib/items'
 
 const DEFAULT_CHARACTER: Character = {
   id: generateId(),
@@ -69,6 +70,10 @@ interface GameState {
   clearAchievementNotification: () => void
   activateDungeon: (dungeonId: string) => void
   completeDungeonMission: (dungeonId: string, missionId: string) => void
+  completeBossMission: (bossId: string, missionId: string) => void
+  buyItem: (itemId: string) => void
+  createCustomMission: (data: Pick<Mission, 'title' | 'description' | 'category' | 'type' | 'icon' | 'xpReward' | 'goldReward' | 'target' | 'unit' | 'difficulty'>) => void
+  deleteCustomMission: (missionId: string) => void
 }
 
 export const useGameStore = create<GameState>()(
@@ -307,6 +312,76 @@ export const useGameStore = create<GameState>()(
 
           return { dungeons: updatedDungeons, stats: newStats }
         })
+      },
+
+      completeBossMission: (bossId, missionId) => {
+        set(state => {
+          const updatedBosses = state.bosses.map(b => {
+            if (b.id !== bossId) return b
+            const updatedMissions = b.missions.map(m =>
+              m.id === missionId ? { ...m, status: 'completed' as const } : m
+            )
+            const completedCount = updatedMissions.filter(m => m.status === 'completed').length
+            const newHp = Math.max(0, b.maxHp - completedCount * (b.maxHp / b.missions.length))
+            const isDefeated = completedCount === b.missions.length
+            return { ...b, missions: updatedMissions, hp: newHp, isDefeated }
+          })
+
+          const boss = updatedBosses.find(b => b.id === bossId)
+          const wasDefeated = state.bosses.find(b => b.id === bossId)?.isDefeated
+
+          if (boss?.isDefeated && !wasDefeated) {
+            const { character: updatedChar, leveledUp, newLevel } = applyXpGain(state.character, boss.xpReward, 'task')
+            const finalChar = { ...updatedChar, gold: updatedChar.gold + boss.goldReward }
+            const newInventory = boss.itemReward
+              ? [...state.inventory, createInventoryItem(boss.itemReward, new Date().toISOString())]
+              : state.inventory
+            return {
+              bosses: updatedBosses,
+              character: finalChar,
+              inventory: newInventory,
+              stats: { ...state.stats, bossesDefeated: state.stats.bossesDefeated + 1 },
+              levelUpNotification: leveledUp ? { show: true, level: newLevel, rank: getRankFromLevel(newLevel) } : state.levelUpNotification,
+            }
+          }
+
+          return { bosses: updatedBosses }
+        })
+      },
+
+      buyItem: (itemId) => {
+        const item = SHOP_ITEMS.find(i => i.id === itemId)
+        if (!item) return
+        set(state => {
+          if (state.character.gold < item.goldValue) return state
+          return {
+            character: { ...state.character, gold: state.character.gold - item.goldValue },
+            inventory: [...state.inventory, createInventoryItem(item, new Date().toISOString())],
+            stats: { ...state.stats, itemsCollected: state.stats.itemsCollected + 1 },
+          }
+        })
+      },
+
+      createCustomMission: (data) => {
+        const expiresAt = (() => {
+          const d = new Date()
+          if (data.type === 'daily') { d.setDate(d.getDate() + 1); d.setHours(0, 0, 0, 0) }
+          else if (data.type === 'weekly') d.setDate(d.getDate() + 7)
+          else if (data.type === 'monthly') d.setMonth(d.getMonth() + 1)
+          return d.toISOString()
+        })()
+        const mission: Mission = {
+          id: `custom-${generateId()}`,
+          ...data,
+          status: 'active',
+          progress: 0,
+          expiresAt,
+        }
+        set(state => ({ missions: [...state.missions, mission] }))
+      },
+
+      deleteCustomMission: (missionId) => {
+        set(state => ({ missions: state.missions.filter(m => m.id !== missionId) }))
       },
     }),
     {

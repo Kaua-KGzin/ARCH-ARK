@@ -13,7 +13,7 @@ import {
 } from '@arch-ark/shared'
 import { checkAchievements, ALL_ACHIEVEMENTS } from '@arch-ark/shared'
 import { getRankFromLevel, generateId, isToday } from '@arch-ark/shared'
-import { createInventoryItem, createStarterLoadout } from '@arch-ark/shared'
+import { createInventoryItem, createStarterLoadout, SHOP_ITEMS } from '@arch-ark/shared'
 
 const initialCreatedAt = new Date().toISOString()
 const STARTER_LOADOUT = createStarterLoadout(initialCreatedAt)
@@ -93,6 +93,9 @@ interface GameState {
   activateDungeon: (dungeonId: string) => void
   completeDungeonMission: (dungeonId: string, missionId: string) => void
   completeBossMission: (bossId: string, missionId: string) => void
+  buyItem: (itemId: string) => void
+  createCustomMission: (data: Pick<Mission, 'title' | 'description' | 'category' | 'type' | 'icon' | 'xpReward' | 'goldReward' | 'target' | 'unit' | 'difficulty'>) => void
+  deleteCustomMission: (missionId: string) => void
 }
 
 export const useGameStore = create<GameState>()(
@@ -525,6 +528,50 @@ export const useGameStore = create<GameState>()(
             rewardNotifications: [...state.rewardNotifications, ...rewardNotifications],
           }
         })
+      },
+
+      buyItem: (itemId) => {
+        const item = SHOP_ITEMS.find(i => i.id === itemId)
+        if (!item) return
+        set(state => {
+          if (state.character.gold < item.goldValue) return state
+          const newItem = createInventoryItem(item, new Date().toISOString())
+          return {
+            character: { ...state.character, gold: state.character.gold - item.goldValue },
+            inventory: [...state.inventory, newItem],
+            stats: { ...state.stats, itemsCollected: state.stats.itemsCollected + 1 },
+            rewardNotifications: [...state.rewardNotifications, {
+              id: generateId(),
+              type: 'loot' as const,
+              title: 'Item comprado',
+              description: item.name,
+              icon: item.icon,
+              rarity: item.rarity,
+            }],
+          }
+        })
+      },
+
+      createCustomMission: (data) => {
+        const expiresAt = (() => {
+          const d = new Date()
+          if (data.type === 'daily') { d.setDate(d.getDate() + 1); d.setHours(0, 0, 0, 0) }
+          else if (data.type === 'weekly') d.setDate(d.getDate() + 7)
+          else if (data.type === 'monthly') d.setMonth(d.getMonth() + 1)
+          return d.toISOString()
+        })()
+        const mission: Mission = {
+          id: `custom-${generateId()}`,
+          ...data,
+          status: 'active',
+          progress: 0,
+          expiresAt,
+        }
+        set(state => ({ missions: [...state.missions, mission] }))
+      },
+
+      deleteCustomMission: (missionId) => {
+        set(state => ({ missions: state.missions.filter(m => m.id !== missionId) }))
       },
     }),
     {

@@ -34,6 +34,9 @@ export const ATTRIBUTE_GAINS: Record<MissionCategory, Partial<Attributes>> = {
   habit: { discipline: 1, vitality: 1, charisma: 1 },
   dungeon: { strength: 1, intelligence: 1, discipline: 2, focus: 1 },
   boss: { strength: 3, intelligence: 3, discipline: 3, resistance: 2 },
+  task: { discipline: 1, focus: 1 },
+  nutrition: { vitality: 2, resistance: 1 },
+  mindfulness: { focus: 2, charisma: 1 },
 }
 
 export function applyXpGain(

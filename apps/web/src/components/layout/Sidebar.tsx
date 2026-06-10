@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { href: '/missions', label: 'Missões', icon: '📋' },
   { href: '/dungeons', label: 'Dungeons', icon: '🏰' },
   { href: '/inventory', label: 'Inventário', icon: '🎒' },
+  { href: '/loja', label: 'Loja', icon: '🏪' },
   { href: '/achievements', label: 'Conquistas', icon: '🏆' },
   { href: '/ranking', label: 'Ranking', icon: '📊' },
   { href: '/ark', label: 'ARK IA', icon: '🤖' },

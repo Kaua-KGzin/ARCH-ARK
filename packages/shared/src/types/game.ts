@@ -2,9 +2,10 @@ export type Rank = 'E' | 'D' | 'C' | 'B' | 'A' | 'S' | 'SS' | 'SSS' | 'Monarch' 
 
 export type CharacterClass = 'Guerreiro' | 'Mago' | 'Assassino' | 'Monarca' | 'Arqueiro' | 'Curandeiro'
 
-export type MissionCategory = 'exercise' | 'study' | 'habit' | 'dungeon' | 'boss'
+export type MissionCategory = 'exercise' | 'study' | 'habit' | 'dungeon' | 'boss' | 'task' | 'nutrition' | 'mindfulness'
 export type MissionType = 'daily' | 'weekly' | 'monthly' | 'dungeon' | 'boss'
 export type MissionStatus = 'active' | 'completed' | 'failed' | 'locked'
+export type MissionDifficulty = 'E' | 'D' | 'C' | 'B' | 'A' | 'S'
 
 export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
 export type ItemType = 'consumable' | 'equipment' | 'scroll' | 'relic' | 'title'
@@ -94,7 +95,7 @@ export interface Mission {
   icon: string
   expiresAt?: string
   completedAt?: string
-  difficulty: 'E' | 'D' | 'C' | 'B' | 'A' | 'S'
+  difficulty: MissionDifficulty
 }
 
 export interface Achievement {
