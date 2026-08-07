@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useGameStore } from '@/store/useGameStore'
+import { useRequireAuth } from '@/hooks/useRequireAuth'
+import { useRankReset } from '@/hooks/useRankReset'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import { LevelUpModal } from '../effects/LevelUpModal'
@@ -17,7 +17,6 @@ interface GameLayoutProps {
 
 export default function GameLayout({ children, title }: GameLayoutProps) {
   const {
-    isOnboarded,
     checkDailyReset,
     levelUpNotification,
     clearLevelUpNotification,
@@ -25,17 +24,19 @@ export default function GameLayout({ children, title }: GameLayoutProps) {
     dismissRewardNotification,
     settings,
   } = useGameStore()
-  const router = useRouter()
 
-  useEffect(() => {
-    if (!isOnboarded) {
-      router.push('/')
-      return
-    }
+  // Gate: check auth + onboarded, redirect if needed
+  const { user, loading, isOnboarded } = useRequireAuth()
+
+  // Rank reset logic
+  useRankReset()
+
+  // Daily reset on mount
+  if (!loading && isOnboarded) {
     checkDailyReset()
-  }, [isOnboarded, router, checkDailyReset])
+  }
 
-  if (!isOnboarded) return null
+  if (loading || !isOnboarded || !user) return null
 
   return (
     <div className="relative min-h-screen bg-[#050508] bg-grid flex text-slate-100 selection:bg-cyan-500 selection:text-black">
