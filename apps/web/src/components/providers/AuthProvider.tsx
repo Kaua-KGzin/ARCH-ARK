@@ -29,10 +29,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Initialize Firebase once on mount
     if (!isInitialized) {
+      console.log('[Auth] Initializing...')
       const success = initFirebase()
       setIsInitialized(true)
 
       if (!success || !isFirebaseConfigured) {
+        console.error('[Auth] Firebase not configured')
         setLoading(false)
         return
       }
@@ -40,11 +42,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Set up the one-and-only auth listener for the whole app
       const auth = getFirebaseAuth()
       if (!auth) {
+        console.error('[Auth] Failed to get Auth instance')
         setLoading(false)
         return
       }
 
+      console.log('[Auth] Setting up listener...')
+      let timeoutId: NodeJS.Timeout | null = null
+
       const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        console.log('[Auth] Listener fired:', currentUser?.email || 'logged out')
+
+        if (timeoutId) {
+          clearTimeout(timeoutId)
+          timeoutId = null
+        }
+
         setUser(currentUser)
 
         // On login, load game state from Firestore imperatively
@@ -52,12 +65,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           try {
             const db = getFirebaseDb()
             if (db) {
+              console.log('[Firestore] Fetching state for user:', currentUser.uid)
               const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
               const snap = await getDoc(gameStateRef)
 
               if (snap.exists()) {
                 const data = snap.data()
-                console.log('[Firestore] Loading game state for user:', currentUser.uid)
+                console.log('[Firestore] Document found, loading state...')
 
                 useGameStore.setState({
                   character: data.character || useGameStore.getState().character,
@@ -74,6 +88,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               } else {
                 console.log('[Firestore] No saved state, using localStorage')
               }
+            } else {
+              console.warn('[Firestore] DB not available')
             }
           } catch (err) {
             console.warn('[Auth] Failed to load Firestore state:', err)
@@ -83,7 +99,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false)
       })
 
-      return () => unsubscribe()
+      // Safety timeout: if listener doesn't fire in 5s, stop loading
+      timeoutId = setTimeout(() => {
+        console.warn('[Auth] Listener timeout after 5s, forcing stop')
+        setLoading(false)
+        timeoutId = null
+      }, 5000)
+
+      return () => {
+        if (timeoutId) clearTimeout(timeoutId)
+        unsubscribe()
+      }
     }
   }, [isInitialized])
 
