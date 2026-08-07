@@ -48,34 +48,123 @@ export function generateArkAnalysis(
   return messages
 }
 
-export function generateArkResponse(userMessage: string, character: Character): ArkMessage {
+type ArkIntent =
+  | 'xp'
+  | 'treino'
+  | 'estudo'
+  | 'rank'
+  | 'streak'
+  | 'atributo'
+  | 'missao'
+
+const INTENT_KEYWORDS: Record<ArkIntent, string[]> = {
+  xp: ['xp', 'experiencia', 'level', 'nivel'],
+  treino: ['treino', 'treinos', 'treinar', 'treinamento', 'exercicio', 'exercicios', 'academia', 'corrida', 'correr', 'hiit'],
+  estudo: ['estudo', 'estudos', 'estudar', 'conhecimento', 'leitura', 'ler', 'livro', 'livros', 'faculdade', 'prova'],
+  rank: ['rank', 'classe', 'patente'],
+  streak: ['streak', 'sequencia', 'dias seguidos', 'racha'],
+  atributo: ['atributo', 'atributos', 'status', 'forca', 'resistencia', 'inteligencia', 'disciplina', 'foco', 'carisma', 'vitalidade'],
+  missao: ['missao', 'missoes', 'tarefa', 'tarefas', 'objetivo', 'objetivos'],
+}
+
+const INTENT_ORDER: ArkIntent[] = [
+  'xp',
+  'treino',
+  'estudo',
+  'rank',
+  'streak',
+  'atributo',
+  'missao',
+]
+
+/** Normaliza o texto: minúsculas, sem acentos, pontuação vira espaço, espaços colapsados. */
+function normalize(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function hasKeyword(text: string, keyword: string): boolean {
+  const pattern = keyword.includes(' ')
+    ? keyword.split(' ').join('\\s+')
+    : keyword
+  return new RegExp(`\\b${pattern}\\b`).test(text)
+}
+
+/** Retorna a intenção com mais palavras-chave no texto (empate: ordem de prioridade). */
+function matchIntent(text: string): ArkIntent | null {
+  let best: ArkIntent | null = null
+  let bestCount = 0
+  for (const intent of INTENT_ORDER) {
+    const count = INTENT_KEYWORDS[intent].filter(k => hasKeyword(text, k)).length
+    if (count > bestCount) {
+      bestCount = count
+      best = intent
+    }
+  }
+  return bestCount > 0 ? best : null
+}
+
+export function generateArkResponse(
+  userMessage: string,
+  character: Character,
+  missions?: Mission[]
+): ArkMessage {
   const now = new Date().toISOString()
-  const lower = userMessage.toLowerCase()
+  const text = normalize(userMessage)
   let content = ''
   let type: ArkMessage['type'] = 'analysis'
 
-  if (lower.includes('xp') || lower.includes('experiência') || lower.includes('level')) {
-    content = `Análise de XP: Você possui ${character.currentXp.toLocaleString()} XP e precisa de ${character.xpToNextLevel.toLocaleString()} XP para o próximo nível. Taxa: ${Math.round((character.currentXp / character.xpToNextLevel) * 100)}%.`
-    type = 'analysis'
-  } else if (lower.includes('treino') || lower.includes('exercício')) {
-    content = `Para maximizar ganhos: Academia 100 XP, Corrida 80 XP, HIIT 120 XP. Como ${character.class}, ${character.class === 'Guerreiro' ? 'exercícios são sua especialidade.' : 'treinos fortalecem Resistência e Vitalidade.'}`
-    type = 'recommendation'
-  } else if (lower.includes('estudo') || lower.includes('conhecimento')) {
-    content = `Protocolo de estudos: 30min = 50 XP, 1h = 100 XP, 2h = 220 XP. ${character.class === 'Mago' ? 'Como Mago, seus ganhos de Inteligência são amplificados.' : 'Estudos desenvolvem Inteligência, Foco e Disciplina.'}`
-    type = 'recommendation'
-  } else if (lower.includes('rank') || lower.includes('classe')) {
-    content = `Status atual: Rank ${character.rank} | Classe ${character.class} | Nível ${character.level}. Complete missões de maior dificuldade e mantenha sequências longas para avançar.`
-    type = 'analysis'
-  } else if (lower.includes('sequência') || lower.includes('streak')) {
-    content = `Sequência atual: ${character.streak} dias. Bônus: 7 dias = +10% XP, 14 = +20%, 30 = +30%, 100 = +50%. Nunca quebre a sequência.`
-    type = 'analysis'
-  } else if (lower.includes('atributo') || lower.includes('status')) {
-    const attrs = character.attributes
-    content = `Atributos — Força: ${attrs.strength} | Resistência: ${attrs.resistance} | Inteligência: ${attrs.intelligence} | Disciplina: ${attrs.discipline} | Foco: ${attrs.focus} | Carisma: ${attrs.charisma} | Vitalidade: ${attrs.vitality}.`
-    type = 'analysis'
-  } else {
-    content = `Sistemas analisados, Caçador. Para perguntas específicas, consulte sobre: XP, treinos, estudos, missões, sequências, atributos ou rank.`
-    type = 'analysis'
+  switch (matchIntent(text)) {
+    case 'xp':
+      content = `Análise de XP: Você possui ${character.currentXp.toLocaleString()} XP e precisa de ${character.xpToNextLevel.toLocaleString()} XP para o próximo nível. Taxa: ${Math.round((character.currentXp / character.xpToNextLevel) * 100)}%.`
+      type = 'analysis'
+      break
+    case 'treino':
+      content = `Para maximizar ganhos: Academia 100 XP, Corrida 80 XP, HIIT 120 XP. Como ${character.class}, ${character.class === 'Guerreiro' ? 'exercícios são sua especialidade.' : 'treinos fortalecem Resistência e Vitalidade.'}`
+      type = 'recommendation'
+      break
+    case 'estudo':
+      content = `Protocolo de estudos: 30min = 50 XP, 1h = 100 XP, 2h = 220 XP. ${character.class === 'Mago' ? 'Como Mago, seus ganhos de Inteligência são amplificados.' : 'Estudos desenvolvem Inteligência, Foco e Disciplina.'}`
+      type = 'recommendation'
+      break
+    case 'rank':
+      content = `Status atual: Rank ${character.rank} | Classe ${character.class} | Nível ${character.level}. Complete missões de maior dificuldade e mantenha sequências longas para avançar.`
+      type = 'analysis'
+      break
+    case 'streak':
+      content = `Sequência atual: ${character.streak} dias. Bônus: 7 dias = +10% XP, 14 = +20%, 30 = +30%, 100 = +50%. Nunca quebre a sequência.`
+      type = 'analysis'
+      break
+    case 'atributo':
+      content = `Atributos — Força: ${character.attributes.strength} | Resistência: ${character.attributes.resistance} | Inteligência: ${character.attributes.intelligence} | Disciplina: ${character.attributes.discipline} | Foco: ${character.attributes.focus} | Carisma: ${character.attributes.charisma} | Vitalidade: ${character.attributes.vitality}.`
+      type = 'analysis'
+      break
+    case 'missao': {
+      const active = missions?.filter(m => m.status === 'active').length ?? null
+      const completed = missions?.filter(m => m.status === 'completed').length ?? null
+      if (active === null || completed === null) {
+        content = 'Protocolo de missões: complete as missões diárias para manter seu streak e maximizar o XP diário. Missões de maior dificuldade concedem recompensas superiores.'
+        type = 'recommendation'
+      } else if (active === 0 && completed > 0) {
+        content = `Excepcional! Todas as missões ativas foram concluídas (${completed} completadas). Descanse, Caçador — ou enfrente uma masmorra para XP extra.`
+        type = 'praise'
+      } else if (active > 0) {
+        content = `Você possui ${active} missões ativas aguardando conclusão e ${completed} já completadas. Cada missão concluída rende XP, ouro e atributos.`
+        type = 'recommendation'
+      } else {
+        content = 'Nenhuma missão ativa no momento. Verifique o reset diário ou aguarde novas missões.'
+        type = 'analysis'
+      }
+      break
+    }
+    default:
+      content = `Sistemas analisados, Caçador. Para perguntas específicas, consulte sobre: XP, treinos, estudos, missões, sequências, atributos ou rank.`
+      type = 'analysis'
   }
 
   return { id: generateId(), role: 'ark', content, timestamp: now, type }

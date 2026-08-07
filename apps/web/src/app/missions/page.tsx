@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import MissionCard from '@/components/missions/MissionCard'
@@ -12,6 +13,7 @@ const TABS: { id: MissionType | 'all'; label: string; icon: string }[] = [
   { id: 'daily', label: 'Diárias', icon: '☀️' },
   { id: 'weekly', label: 'Semanais', icon: '📅' },
   { id: 'monthly', label: 'Mensais', icon: '🗓️' },
+  { id: 'custom', label: 'Customizadas', icon: '✨' },
 ]
 
 const CATEGORIES = [
@@ -60,12 +62,17 @@ export default function MissionsPage() {
         </div>
 
         {/* Custom Mission */}
-        <div className="card border-dashed border-[#1a1a2e] flex items-center justify-between">
+        <div className="card border-dashed border-purple-500/30 flex items-center justify-between">
           <div>
-            <div className="text-white font-semibold text-sm">Adicionar Missão Personalizada</div>
-            <div className="text-gray-500 text-xs">Em breve</div>
+            <div className="text-white font-semibold text-sm">✨ Missões Personalizadas</div>
+            <div className="text-gray-500 text-xs">Peça ao ARK para criar missões sob medida com Gemini</div>
           </div>
-          <button className="btn-secondary text-sm opacity-50 cursor-not-allowed" disabled>+ Nova Missão</button>
+          <Link
+            href="/ark"
+            className="px-4 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white transition-all"
+          >
+            Criar no Ark
+          </Link>
         </div>
 
         {/* Filters */}

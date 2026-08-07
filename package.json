@@ -9,6 +9,10 @@
     "web": "npm run dev --workspace=apps/web",
     "mobile": "npm run start --workspace=apps/mobile",
     "build:web": "npm run build --workspace=apps/web",
-    "install:all": "npm install"
+    "install:all": "npm install",
+    "deploy:web": "vercel --cwd apps/web"
+  },
+  "devDependencies": {
+    "vercel": "^58.8.0"
   }
 }

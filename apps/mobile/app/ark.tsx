@@ -33,7 +33,7 @@ export default function ArkScreen() {
     }
     addArkMessage(userMsg)
 
-    const response = generateArkResponse(input.trim(), character)
+    const response = generateArkResponse(input.trim(), character, missions)
     setTimeout(() => {
       addArkMessage(response)
       scrollRef.current?.scrollToEnd({ animated: true })

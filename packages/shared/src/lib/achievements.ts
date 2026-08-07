@@ -1,4 +1,4 @@
-import { Achievement, Character, GameStats } from '../types/game'
+import { Achievement, Character, GameStats, Mission } from '../types/game'
 
 export const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'first-mission', title: 'Primeiro Passo', description: 'Complete sua primeira missão', icon: '🎯', rarity: 'common', xpReward: 50, isUnlocked: false, progress: 0, target: 1 },
@@ -21,12 +21,25 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
   { id: 'boss-1', title: 'Caçador de Bosses', description: 'Derrote seu primeiro boss', icon: '👹', rarity: 'rare', xpReward: 1000, isUnlocked: false, progress: 0, target: 1 },
   { id: 'gold-1000', title: 'Rico', description: 'Acumule 1000 de ouro', icon: '💰', rarity: 'uncommon', xpReward: 300, isUnlocked: false, progress: 0, target: 1000 },
   { id: 'all-daily', title: 'Perfeição Diária', description: 'Complete todas as missões diárias', icon: '⭐', rarity: 'uncommon', xpReward: 400, isUnlocked: false, progress: 0, target: 1 },
+  { id: 'equip-1', title: 'Primeiro Equipamento', description: 'Equipe seu primeiro item', icon: '🪖', rarity: 'common', xpReward: 100, isUnlocked: false, progress: 0, target: 1 },
+  { id: 'equip-3', title: 'Guerreiro Armado', description: 'Equipe 3 itens simultaneamente', icon: '🛡️', rarity: 'uncommon', xpReward: 300, isUnlocked: false, progress: 0, target: 3 },
+  { id: 'equip-full', title: 'Armadura Completa', description: 'Equipe todos os 6 slots', icon: '⚙️', rarity: 'epic', xpReward: 1500, isUnlocked: false, progress: 0, target: 6 },
+  { id: 'gold-5000', title: 'Tesouro do Caçador', description: 'Acumule 5000 de ouro', icon: '🪙', rarity: 'rare', xpReward: 800, isUnlocked: false, progress: 0, target: 5000 },
+  { id: 'gold-10000', title: 'Magnata', description: 'Acumule 10.000 de ouro', icon: '💎', rarity: 'epic', xpReward: 2000, isUnlocked: false, progress: 0, target: 10000 },
+  { id: 'rank-c', title: 'Rango C', description: 'Alcance o rank C (nível 15)', icon: '🎖️', rarity: 'uncommon', xpReward: 400, isUnlocked: false, progress: 0, target: 15 },
+  { id: 'rank-a', title: 'Elite', description: 'Alcance o rank A (nível 40)', icon: '🏅', rarity: 'rare', xpReward: 1500, isUnlocked: false, progress: 0, target: 40 },
+  { id: 'habits-50', title: 'Mestre dos Hábitos', description: 'Complete 50 hábitos', icon: '🌱', rarity: 'uncommon', xpReward: 600, isUnlocked: false, progress: 0, target: 50 },
+  { id: 'missions-100', title: 'Veterano', description: 'Complete 100 missões', icon: '⚔️', rarity: 'rare', xpReward: 1500, isUnlocked: false, progress: 0, target: 100 },
+  { id: 'dungeons-5', title: 'Conquistador de Masmorras', description: 'Limpe 5 dungeons', icon: '🏯', rarity: 'epic', xpReward: 2500, isUnlocked: false, progress: 0, target: 5 },
+  { id: 'bosses-5', title: 'Caçador de Reis Demoníacos', description: 'Derrote 5 bosses', icon: '👹', rarity: 'epic', xpReward: 3000, isUnlocked: false, progress: 0, target: 5 },
+  { id: 'items-25', title: 'Colecionador', description: 'Colete 25 itens', icon: '🎒', rarity: 'rare', xpReward: 800, isUnlocked: false, progress: 0, target: 25 },
 ]
 
 export function checkAchievements(
   character: Character,
   stats: GameStats,
-  previousAchievements: Achievement[]
+  previousAchievements: Achievement[],
+  context?: { missions?: Mission[]; equippedCount?: number }
 ): Achievement[] {
   return previousAchievements.map(ach => {
     if (ach.isUnlocked) return ach
@@ -54,6 +67,23 @@ export function checkAchievements(
       case 'dungeon-1': progress = stats.dungeonsCleared; break
       case 'boss-1': progress = stats.bossesDefeated; break
       case 'gold-1000': progress = character.gold; break
+      case 'all-daily': {
+        const dailies = context?.missions?.filter(m => m.type === 'daily') ?? []
+        progress = dailies.length > 0 && dailies.every(m => m.status === 'completed') ? 1 : 0
+        break
+      }
+      case 'equip-1':
+      case 'equip-3':
+      case 'equip-full': progress = context?.equippedCount ?? 0; break
+      case 'gold-5000':
+      case 'gold-10000': progress = character.gold; break
+      case 'rank-c':
+      case 'rank-a': progress = character.level; break
+      case 'habits-50': progress = stats.totalHabitsCompleted; break
+      case 'missions-100': progress = stats.totalMissionsCompleted; break
+      case 'dungeons-5': progress = stats.dungeonsCleared; break
+      case 'bosses-5': progress = stats.bossesDefeated; break
+      case 'items-25': progress = stats.itemsCollected; break
     }
 
     isUnlocked = progress >= ach.target

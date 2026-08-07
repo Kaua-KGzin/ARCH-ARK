@@ -3,7 +3,7 @@ export type Rank = 'E' | 'D' | 'C' | 'B' | 'A' | 'S' | 'SS' | 'SSS' | 'Monarch' 
 export type CharacterClass = 'Guerreiro' | 'Mago' | 'Assassino' | 'Monarca' | 'Arqueiro' | 'Curandeiro'
 
 export type MissionCategory = 'exercise' | 'study' | 'habit' | 'dungeon' | 'boss'
-export type MissionType = 'daily' | 'weekly' | 'monthly' | 'dungeon' | 'boss'
+export type MissionType = 'daily' | 'weekly' | 'monthly' | 'dungeon' | 'boss' | 'custom'
 export type MissionStatus = 'active' | 'completed' | 'failed' | 'locked'
 
 export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
