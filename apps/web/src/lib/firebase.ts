@@ -19,12 +19,12 @@ import {
 } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-key-arch-ark',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'link-89720.firebaseapp.com',
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'link-89720',
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'link-89720.firebasestorage.app',
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '944023340985',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:944023340985:web:demo123456789',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 }
 
 // Inicialização Singleton — evita múltiplas instâncias em hot-reload do Next.js

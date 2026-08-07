@@ -24,16 +24,38 @@ export default function ProfilePage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      if (!u) {
+    let isMounted = true
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (u) => {
+        if (!isMounted) return
+        if (!u) {
+          router.push('/auth')
+        } else {
+          setUser(u)
+          setNewEmail(u.email || '')
+          setLoading(false)
+        }
+      },
+      (error) => {
+        if (!isMounted) return
+        console.warn('[Profile] Auth error:', error)
         router.push('/auth')
-      } else {
-        setUser(u)
-        setNewEmail(u.email || '')
+      }
+    )
+
+    const timeout = setTimeout(() => {
+      if (isMounted) {
         setLoading(false)
       }
-    })
-    return () => unsubscribe()
+    }, 5000)
+
+    return () => {
+      isMounted = false
+      unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [router])
 
   const handleUpdateEmail = async () => {

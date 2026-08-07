@@ -21,14 +21,38 @@ export default function AuthPage() {
 
   // Verifica se já está logado
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.push('/dashboard')
-      } else {
+    let isMounted = true
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        if (!isMounted) return
+        if (user) {
+          router.push('/dashboard')
+        } else {
+          setIsCheckingAuth(false)
+        }
+      },
+      (error) => {
+        if (!isMounted) return
+        console.warn('[Auth] Error checking state:', error)
+        setIsCheckingAuth(false) // Sai do loading mesmo com erro
+      }
+    )
+
+    // Timeout de segurança
+    const timeout = setTimeout(() => {
+      if (isMounted) {
+        console.warn('[Auth] Check timeout')
         setIsCheckingAuth(false)
       }
-    })
-    return () => unsubscribe()
+    }, 5000)
+
+    return () => {
+      isMounted = false
+      unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [router])
 
   if (isCheckingAuth) {

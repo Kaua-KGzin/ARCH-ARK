@@ -29,16 +29,38 @@ export default function OnboardingPage() {
 
   // Verifica autenticação
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
+    let isMounted = true
+
+    const unsubscribe = onAuthStateChanged(
+      auth,
+      (user) => {
+        if (!isMounted) return
+        if (!user) {
+          router.push('/auth')
+        } else if (isOnboarded) {
+          router.push('/dashboard')
+        } else {
+          setLoading(false)
+        }
+      },
+      (error) => {
+        if (!isMounted) return
+        console.warn('[Onboarding] Auth error:', error)
         router.push('/auth')
-      } else if (isOnboarded) {
-        router.push('/dashboard')
-      } else {
+      }
+    )
+
+    const timeout = setTimeout(() => {
+      if (isMounted && !isOnboarded) {
         setLoading(false)
       }
-    })
-    return () => unsubscribe()
+    }, 5000)
+
+    return () => {
+      isMounted = false
+      unsubscribe()
+      clearTimeout(timeout)
+    }
   }, [router, isOnboarded])
 
   const handleCreateCharacter = async (e: React.FormEvent) => {
