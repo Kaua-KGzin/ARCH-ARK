@@ -27,44 +27,74 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 }
 
-// Inicialização Singleton — evita múltiplas instâncias em hot-reload do Next.js
-let app: FirebaseApp
-try {
-  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
-} catch (err) {
-  console.error('[Firebase] Initialization error:', err)
-  throw err
+// Lazy initialization — only in browser
+let app: FirebaseApp | undefined
+let _auth: Auth | undefined
+let _db: Firestore | undefined
+
+function initializeFirebaseApp(): FirebaseApp {
+  if (typeof window === 'undefined') {
+    throw new Error('[Firebase] Can only be initialized in browser')
+  }
+  if (app) return app
+  try {
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+    return app
+  } catch (err) {
+    console.error('[Firebase] Initialization error:', err)
+    throw err
+  }
 }
 
-// Auth
-export const auth: Auth = getAuth(app)
-export const googleProvider = new GoogleAuthProvider()
-googleProvider.setCustomParameters({ prompt: 'select_account' })
+export function getAuthInstance(): Auth {
+  if (!_auth) {
+    const firebaseApp = initializeFirebaseApp()
+    _auth = getAuth(firebaseApp)
+  }
+  return _auth
+}
 
-// Firestore com Persistência Offline Multi-Tab (Spark Plan Friendly)
-// Singleton guard: initializeFirestore só pode ser chamado uma vez por app
-let _db: Firestore
-
-function getDb(): Firestore {
-  if (_db) return _db
-  if (typeof window !== 'undefined') {
-    try {
-      _db = initializeFirestore(app, {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager(),
-        }),
-      })
-    } catch {
-      // já inicializado (hot reload)
-      _db = getFirestore(app)
+export function getDbInstance(): Firestore {
+  if (!_db) {
+    const firebaseApp = initializeFirebaseApp()
+    if (typeof window !== 'undefined') {
+      try {
+        _db = initializeFirestore(firebaseApp, {
+          localCache: persistentLocalCache({
+            tabManager: persistentMultipleTabManager(),
+          }),
+        })
+      } catch {
+        _db = getFirestore(firebaseApp)
+      }
+    } else {
+      _db = getFirestore(firebaseApp)
     }
-  } else {
-    _db = getFirestore(app)
   }
   return _db
 }
 
-export const db: Firestore = getDb()
+// Export lazy-loaded instances
+export const auth: Auth = new Proxy({} as Auth, {
+  get: (_, prop) => getAuthInstance()[prop as keyof Auth],
+})
+
+export const db: Firestore = new Proxy({} as Firestore, {
+  get: (_, prop) => getDbInstance()[prop as keyof Firestore],
+})
+
+let _googleProvider: GoogleAuthProvider | undefined
+export function getGoogleProvider(): GoogleAuthProvider {
+  if (!_googleProvider) {
+    _googleProvider = new GoogleAuthProvider()
+    _googleProvider.setCustomParameters({ prompt: 'select_account' })
+  }
+  return _googleProvider
+}
+
+export const googleProvider = new Proxy({} as GoogleAuthProvider, {
+  get: (_, prop) => getGoogleProvider()[prop as keyof GoogleAuthProvider],
+})
 
 export {
   signInWithPopup,
