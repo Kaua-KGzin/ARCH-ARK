@@ -6,4 +6,7 @@ export * from './lib/items'
 export * from './lib/achievements'
 export * from './lib/ark-ai'
 export * from './lib/prophecy'
+export * from './lib/skills'
+export * from './lib/titles'
 export * from './store/createGameStore'
+

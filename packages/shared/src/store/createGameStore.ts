@@ -3,7 +3,7 @@ import { persist, createJSONStorage, StateStorage } from 'zustand/middleware'
 import {
   Character, CharacterClass, Mission, Item, InventoryItem,
   Equipment, Achievement, Dungeon, Boss, ArkMessage, GameStats,
-  Attributes, LevelUpNotification, RewardNotification,
+  Attributes, LevelUpNotification, RewardNotification, Skill, Title, UserSettings,
 } from '../types/game'
 import { applyXpGain, getStreakBonus } from '../lib/xp'
 import {
@@ -13,6 +13,9 @@ import {
 import { SHOP_ITEMS, createInventoryItem, createStarterLoadout } from '../lib/items'
 import { checkAchievements, ALL_ACHIEVEMENTS } from '../lib/achievements'
 import { calculateLevelFromXp, getRankFromLevel, generateId, isToday } from '../lib/utils'
+import { SYSTEM_SKILLS, checkSkillUnlocks } from '../lib/skills'
+import { SYSTEM_TITLES } from '../lib/titles'
+
 
 export const CURRENT_CONTENT_VERSION = 2
 
@@ -55,6 +58,9 @@ export interface GameState {
   achievements: Achievement[]
   dungeons: Dungeon[]
   bosses: Boss[]
+  skills: Skill[]
+  titles: Title[]
+  settings: UserSettings
   arkMessages: ArkMessage[]
   stats: GameStats
   isOnboarded: boolean
@@ -75,6 +81,9 @@ export interface GameState {
   equipItem: (item: InventoryItem) => void
   unequipItem: (slot: keyof Equipment) => void
   addToInventory: (item: Item) => void
+  toggleSkillEquip: (skillId: string) => void
+  setActiveTitle: (titleId: string) => void
+  updateSettings: (newSettings: Partial<UserSettings>) => void
   addArkMessage: (message: ArkMessage) => void
   checkDailyReset: () => void
   ensureStarterLoadout: () => void
@@ -90,6 +99,7 @@ export interface GameState {
   buyItem: (itemId: string) => void
   setProphecy: (text: string) => void
 }
+
 
 export interface GameStoreOptions {
   /** Chave de persistência. Padrão: 'arch-ark-game' */
@@ -115,6 +125,14 @@ export function createGameStore(options: GameStoreOptions = {}) {
         achievements: ALL_ACHIEVEMENTS,
         dungeons: generateDungeons() as Dungeon[],
         bosses: generateBosses() as Boss[],
+        skills: SYSTEM_SKILLS,
+        titles: SYSTEM_TITLES,
+        settings: {
+          soundEnabled: true,
+          particlesEnabled: true,
+          themeMode: 'monarch-dark',
+          compactMissions: false,
+        },
         arkMessages: [],
         stats: {
           totalMissionsCompleted: 0,
@@ -135,6 +153,28 @@ export function createGameStore(options: GameStoreOptions = {}) {
         prophecy: null,
         prophecyDate: null,
         contentVersion: CURRENT_CONTENT_VERSION,
+
+        toggleSkillEquip: (skillId) => {
+          set(state => ({
+            skills: state.skills.map(s => s.id === skillId ? { ...s, isEquipped: !s.isEquipped } : s)
+          }))
+        },
+
+        setActiveTitle: (titleId) => {
+          const state = get()
+          const foundTitle = state.titles.find(t => t.id === titleId)
+          if (!foundTitle || !foundTitle.isUnlocked) return
+          set(st => ({
+            character: { ...st.character, title: foundTitle.name }
+          }))
+        },
+
+        updateSettings: (newSettings) => {
+          set(state => ({
+            settings: { ...state.settings, ...newSettings }
+          }))
+        },
+
 
         setupCharacter: (name, cls) => {
           const classAttributes: Record<CharacterClass, Partial<Character['attributes']>> = {
@@ -622,11 +662,18 @@ export function createGameStore(options: GameStoreOptions = {}) {
             achievements,
             dungeons,
             bosses,
+            skills: checkSkillUnlocks(base.character, base.skills ?? SYSTEM_SKILLS),
+            titles: base.titles ?? SYSTEM_TITLES,
+            settings: base.settings ?? {
+              soundEnabled: true,
+              particlesEnabled: true,
+              themeMode: 'monarch-dark',
+              compactMissions: false,
+            },
             contentVersion: CURRENT_CONTENT_VERSION,
             prophecy: base.prophecy ?? null,
             prophecyDate: base.prophecyDate ?? null,
             rewardNotifications: base.rewardNotifications ?? [],
-            // Compatibilidade com o formato antigo de levelUpNotification ({show, level, rank})
             levelUpNotification:
               base.levelUpNotification && 'playerName' in base.levelUpNotification
                 ? base.levelUpNotification
@@ -641,6 +688,9 @@ export function createGameStore(options: GameStoreOptions = {}) {
           achievements: state.achievements,
           dungeons: state.dungeons,
           bosses: state.bosses,
+          skills: state.skills,
+          titles: state.titles,
+          settings: state.settings,
           arkMessages: state.arkMessages,
           stats: state.stats,
           isOnboarded: state.isOnboarded,

@@ -8,6 +8,7 @@ import { cn, xpBarPercent, getRankColor } from '@/lib/utils'
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Dashboard', icon: '⚡' },
   { href: '/character', label: 'Personagem', icon: '👤' },
+  { href: '/skills', label: 'Habilidades', icon: '✨' },
   { href: '/missions', label: 'Missões', icon: '📋' },
   { href: '/dungeons', label: 'Dungeons', icon: '🏰' },
   { href: '/inventory', label: 'Inventário', icon: '🎒' },
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { href: '/ranking', label: 'Ranking', icon: '📊' },
   { href: '/ark', label: 'ARK IA', icon: '🤖' },
 ]
+
 
 export default function Sidebar() {
   const pathname = usePathname()

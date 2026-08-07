@@ -184,6 +184,43 @@ export interface GameStats {
   monthlyXp: number
 }
 
+export interface Skill {
+  id: string
+  name: string
+  description: string
+  icon: string
+  type: 'passive' | 'active'
+  category: 'strength' | 'intelligence' | 'discipline' | 'vitality' | 'shadow'
+  requiredLevel: number
+  requiredAttributes?: Partial<Attributes>
+  isUnlocked: boolean
+  isEquipped: boolean
+  effect: {
+    xpMultiplier?: number
+    goldMultiplier?: number
+    statBonus?: Partial<Attributes>
+    streakBonusMultiplier?: number
+  }
+}
+
+export interface Title {
+  id: string
+  name: string
+  description: string
+  badge: string
+  rarity: ItemRarity
+  attributeBonus?: Partial<Attributes>
+  xpBonus?: number
+  isUnlocked: boolean
+}
+
+export interface UserSettings {
+  soundEnabled: boolean
+  particlesEnabled: boolean
+  themeMode: 'monarch-dark' | 'shadow-purple' | 'crimson-boss'
+  compactMissions: boolean
+}
+
 export interface LevelUpNotification {
   show: boolean
   playerName: string
@@ -205,3 +242,4 @@ export interface RewardNotification {
   icon: string
   rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
 }
+

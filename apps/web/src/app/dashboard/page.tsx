@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
+import { motion } from 'framer-motion'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import XpBar from '@/components/character/XpBar'
@@ -8,15 +9,18 @@ import MissionCard from '@/components/missions/MissionCard'
 import { getRankColor, getRankBgColor, getClassColor, getClassIcon, formatNumber, cn, isToday } from '@/lib/utils'
 import { generateLocalProphecy } from '@/lib/prophecy'
 import { calculateSecondaryStats } from '@/lib/xp'
+import Link from 'next/link'
 
 export default function DashboardPage() {
-  const { character, missions, stats, achievements, dungeons, prophecy, prophecyDate, setProphecy } = useGameStore()
+  const { character, missions, stats, achievements, dungeons, prophecy, prophecyDate, setProphecy, skills } = useGameStore()
   const secondary = calculateSecondaryStats(character)
+  const equippedSkills = skills.filter(s => s.isEquipped)
 
   const dailyMissions = missions.filter(m => m.type === 'daily')
   const completedToday = dailyMissions.filter(m => m.status === 'completed').length
   const unlockedAchievements = achievements.filter(a => a.isUnlocked).length
   const activeDungeons = dungeons.filter(d => d.isActive && !d.isCompleted).length
+
 
   // Profecia do dia: busca via Gemini quando não há profecia de hoje (fallback local)
   useEffect(() => {
@@ -133,6 +137,45 @@ export default function DashboardPage() {
             </div>
           ))}
         </div>
+
+
+        {/* Equipped Skills Section */}
+
+        <div className="rounded-xl border border-cyan-500/20 bg-slate-950/60 p-4 backdrop-blur-md">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-white font-bold text-sm flex items-center gap-2">
+              <span>✨ Habilidades Equipadas</span>
+              <span className="text-xs text-cyan-400 font-mono">({equippedSkills.length})</span>
+            </h3>
+            <Link
+              href="/skills"
+              className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors font-semibold"
+            >
+              Gerenciar Árvore →
+            </Link>
+          </div>
+          {equippedSkills.length === 0 ? (
+            <div className="text-xs text-slate-500 italic py-2">
+              Nenhuma habilidade equipada no momento. Visite a Árvore de Habilidades para ativar buffs do Sistema!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {equippedSkills.map((sk) => (
+                <div
+                  key={sk.id}
+                  className="flex items-center gap-3 rounded-lg border border-cyan-500/30 bg-cyan-950/20 p-2.5"
+                >
+                  <span className="text-xl">{sk.icon}</span>
+                  <div>
+                    <div className="text-xs font-bold text-white">{sk.name}</div>
+                    <div className="text-[11px] text-cyan-300/80">{sk.description}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Daily Missions */}
