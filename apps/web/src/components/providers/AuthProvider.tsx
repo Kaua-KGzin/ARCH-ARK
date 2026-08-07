@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Set up the one-and-only auth listener for the whole app
       const auth = getFirebaseAuth()
+      console.log('[Auth] Auth instance:', auth ? '✅ obtained' : '❌ null')
       if (!auth) {
         console.error('[Auth] Failed to get Auth instance')
         setLoading(false)
@@ -50,7 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.log('[Auth] Setting up listener...')
       let timeoutId: NodeJS.Timeout | null = null
 
-      const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      try {
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
         console.log('[Auth] Listener fired:', currentUser?.email || 'logged out')
 
         if (timeoutId) {
@@ -97,18 +99,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setLoading(false)
-      })
+        })
 
-      // Safety timeout: if listener doesn't fire in 5s, stop loading
-      timeoutId = setTimeout(() => {
-        console.warn('[Auth] Listener timeout after 5s, forcing stop')
+        console.log('[Auth] ✅ Listener registered, unsubscribe:', typeof unsubscribe)
+
+        // Safety timeout: if listener doesn't fire in 5s, stop loading
+        timeoutId = setTimeout(() => {
+          console.warn('[Auth] Listener timeout after 5s, forcing stop')
+          setLoading(false)
+          timeoutId = null
+        }, 5000)
+
+        return () => {
+          if (timeoutId) clearTimeout(timeoutId)
+          unsubscribe()
+        }
+      } catch (err) {
+        console.error('[Auth] Failed to set up listener:', err)
         setLoading(false)
-        timeoutId = null
-      }, 5000)
-
-      return () => {
-        if (timeoutId) clearTimeout(timeoutId)
-        unsubscribe()
       }
     }
   }, [isInitialized])
