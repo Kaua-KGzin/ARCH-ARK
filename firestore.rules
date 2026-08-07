@@ -25,9 +25,36 @@ service cloud.firestore {
       allow read, write: if isOwner(userId);
     }
 
+    // Regras para Missions do Usuário
+    match /users/{userId}/missions/{missionId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Regras para Achievements do Usuário
+    match /users/{userId}/achievements/{achievementId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Regras para Skills do Usuário
+    match /users/{userId}/skills/{skillId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Regras para Inventory do Usuário
+    match /users/{userId}/inventory/{itemId} {
+      allow read, write: if isOwner(userId);
+    }
+
     // Regras para Imagens Geradas por IA / Comunidade
     match /images/{imageId} {
       allow read: if true; // Leitura pública do feed de imagens
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // Regras para Galeria de Imagens IA (pública)
+    match /ai_gallery/{galleryId} {
+      allow read: if true;
       allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
     }

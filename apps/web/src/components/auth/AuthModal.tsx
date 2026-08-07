@@ -23,17 +23,33 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
   if (!isOpen) return null
 
+  const getFirebaseErrorMessage = (code: string): string => {
+    const errorMap: Record<string, string> = {
+      'auth/email-already-in-use': 'Este e-mail já está registrado.',
+      'auth/invalid-email': 'E-mail inválido.',
+      'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres).',
+      'auth/user-not-found': 'Usuário não encontrado.',
+      'auth/wrong-password': 'Senha incorreta.',
+      'auth/too-many-requests': 'Muitas tentativas. Tente novamente em alguns minutos.',
+      'auth/popup-closed-by-user': 'Autenticação do Google foi cancelada.',
+    }
+    return errorMap[code] || 'Erro ao autenticar. Tente novamente.'
+  }
+
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email.includes('@')) {
-      toast.error('Por favor, insira um e-mail válido.')
+    setErrorMessage('')
+
+    if (!email.includes('@') || !email.includes('.')) {
+      setErrorMessage('Por favor, insira um e-mail válido.')
       return
     }
     if (password.length < 6) {
-      toast.error('A senha deve ter pelo menos 6 caracteres.')
+      setErrorMessage('A senha deve ter pelo menos 6 caracteres.')
       return
     }
 
@@ -41,32 +57,41 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
     try {
       if (mode === 'login') {
         const res = await signInWithEmailAndPassword(auth, email, password)
-        toast.success(`Bem-vindo de volta, ${res.user.email}!`)
+        toast.success(`Bem-vindo de volta, ${res.user.email?.split('@')[0]}!`, { duration: 3000 })
         if (onSuccess) onSuccess(res.user)
+        setEmail('')
+        setPassword('')
       } else {
         const res = await createUserWithEmailAndPassword(auth, email, password)
-        toast.success('Conta criada com sucesso no Sistema Monarca!')
+        toast.success('🎉 Conta criada com sucesso no Sistema Monarca!', { duration: 3000 })
         if (onSuccess) onSuccess(res.user)
+        setEmail('')
+        setPassword('')
       }
       onClose()
     } catch (err: any) {
-      console.error(err)
-      toast.error(err.message || 'Erro ao autenticar. Verifique suas credenciais.')
+      const message = getFirebaseErrorMessage(err.code)
+      setErrorMessage(message)
+      console.error('[Auth Error]', err.code, err.message)
     } finally {
       setLoading(false)
     }
   }
 
   const handleGoogleSignIn = async () => {
+    setErrorMessage('')
     setLoading(true)
     try {
       const res = await signInWithPopup(auth, googleProvider)
-      toast.success(`Logado via Google: ${res.user.displayName || res.user.email}`)
+      toast.success(`🔐 Autenticado: ${res.user.displayName || res.user.email}`, { duration: 3000 })
       if (onSuccess) onSuccess(res.user)
       onClose()
     } catch (err: any) {
-      console.error(err)
-      toast.error('Falha ao autenticar com o Google.')
+      if (err.code !== 'auth/popup-closed-by-user') {
+        const message = getFirebaseErrorMessage(err.code)
+        setErrorMessage(message)
+      }
+      console.error('[Google Auth Error]', err.code, err.message)
     } finally {
       setLoading(false)
     }
@@ -110,10 +135,25 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
             </button>
           </div>
 
+          {/* Error Display */}
+          {errorMessage && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-4 rounded-lg border border-red-500/50 bg-red-500/10 px-4 py-2.5 text-sm text-red-300"
+            >
+              ⚠️ {errorMessage}
+            </motion.div>
+          )}
+
           {/* Mode Switcher Tabs */}
           <div className="my-4 flex rounded-xl border border-slate-800 bg-slate-900/60 p-1">
             <button
-              onClick={() => setMode('login')}
+              onClick={() => {
+                setMode('login')
+                setErrorMessage('')
+              }}
               className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${
                 mode === 'login'
                   ? 'bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(0,240,255,0.4)]'
@@ -123,7 +163,10 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
               LOGIN
             </button>
             <button
-              onClick={() => setMode('register')}
+              onClick={() => {
+                setMode('register')
+                setErrorMessage('')
+              }}
               className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${
                 mode === 'register'
                   ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(139,92,246,0.4)]'
@@ -164,17 +207,28 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
               />
             </div>
 
-            <button
+            <motion.button
               type="submit"
-              disabled={loading}
-              className="btn-primary w-full tracking-wider uppercase text-xs py-3 mt-2"
+              disabled={loading || !email || password.length < 6}
+              whileHover={!loading ? { scale: 1.02 } : {}}
+              whileTap={!loading ? { scale: 0.98 } : {}}
+              className={`btn-primary w-full tracking-wider uppercase text-xs py-3 mt-2 transition-all ${
+                loading || !email || password.length < 6
+                  ? 'opacity-50 cursor-not-allowed'
+                  : ''
+              }`}
             >
-              {loading
-                ? 'Conectando ao Firebase...'
-                : mode === 'login'
-                ? '⚡ Entrar no Sistema'
-                : '👑 Despertar Caçador'}
-            </button>
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 rounded-full border-2 border-slate-400 border-t-cyan-400 animate-spin" />
+                  Autenticando...
+                </span>
+              ) : mode === 'login' ? (
+                '⚡ Entrar no Sistema'
+              ) : (
+                '👑 Despertar Caçador'
+              )}
+            </motion.button>
           </form>
 
           {/* Divider */}
@@ -186,10 +240,14 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
           </div>
 
           {/* Google Login */}
-          <button
+          <motion.button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-slate-800 bg-slate-900/80 py-2.5 text-xs font-bold text-white hover:border-slate-700 hover:bg-slate-900 transition-all"
+            whileHover={!loading ? { scale: 1.02 } : {}}
+            whileTap={!loading ? { scale: 0.98 } : {}}
+            className={`flex w-full items-center justify-center gap-3 rounded-xl border border-slate-800 bg-slate-900/80 py-2.5 text-xs font-bold text-white hover:border-slate-700 hover:bg-slate-900 transition-all ${
+              loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <svg className="h-4 w-4" viewBox="0 0 24 24">
               <path
@@ -210,7 +268,7 @@ export function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
               />
             </svg>
             Google Sign-In
-          </button>
+          </motion.button>
         </motion.div>
       </div>
     </AnimatePresence>

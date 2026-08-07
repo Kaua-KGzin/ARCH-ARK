@@ -19,15 +19,15 @@ import {
 } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-api-key-arch-ark',
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'arch-ark.firebaseapp.com',
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'arch-ark-project',
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'arch-ark.appspot.com',
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '1234567890',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:1234567890:web:abcdef123456',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'link-89720.firebaseapp.com',
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'link-89720',
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'link-89720.firebasestorage.app',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '944023340985',
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-// Inicialização Singleton do App Firebase
+// Inicialização Singleton — evita múltiplas instâncias em hot-reload do Next.js
 const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
 
 // Auth
@@ -35,15 +35,30 @@ export const auth: Auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()
 googleProvider.setCustomParameters({ prompt: 'select_account' })
 
-// Firestore com Suporte a Cache Offline (Spark Plan Friendly)
-export const db: Firestore =
-  typeof window !== 'undefined'
-    ? initializeFirestore(app, {
+// Firestore com Persistência Offline Multi-Tab (Spark Plan Friendly)
+// Singleton guard: initializeFirestore só pode ser chamado uma vez por app
+let _db: Firestore
+
+function getDb(): Firestore {
+  if (_db) return _db
+  if (typeof window !== 'undefined') {
+    try {
+      _db = initializeFirestore(app, {
         localCache: persistentLocalCache({
           tabManager: persistentMultipleTabManager(),
         }),
       })
-    : getFirestore(app)
+    } catch {
+      // já inicializado (hot reload)
+      _db = getFirestore(app)
+    }
+  } else {
+    _db = getFirestore(app)
+  }
+  return _db
+}
+
+export const db: Firestore = getDb()
 
 export {
   signInWithPopup,
@@ -53,3 +68,4 @@ export {
   onAuthStateChanged,
 }
 export type { User }
+

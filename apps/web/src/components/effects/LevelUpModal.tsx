@@ -17,39 +17,87 @@ export function LevelUpModal({ notification, onClose }: LevelUpModalProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-lg"
         onClick={onClose}
       >
         <motion.div
-          initial={{ scale: 0.7, y: 30, opacity: 0 }}
-          animate={{ scale: 1, y: 0, opacity: 1 }}
-          exit={{ scale: 0.8, opacity: 0 }}
-          transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-          className="relative w-full max-w-md overflow-hidden rounded-2xl border border-cyan-500/40 bg-slate-950 p-6 text-center shadow-[0_0_50px_rgba(0,240,255,0.3)]"
+          initial={{ scale: 0.6, y: 60, opacity: 0, filter: 'blur(10px)' }}
+          animate={{
+            scale: 1,
+            y: [50, -8, 0],
+            opacity: 1,
+            filter: 'blur(0px)',
+          }}
+          exit={{
+            scale: 0.75,
+            y: -40,
+            opacity: 0,
+            filter: 'blur(8px)',
+            transition: { duration: 0.4 },
+          }}
+          transition={{
+            type: 'spring',
+            damping: 22,
+            stiffness: 280,
+            delay: 0.1,
+          }}
+          className="relative w-full max-w-md overflow-hidden rounded-2xl border border-cyan-400/50 bg-gradient-to-b from-slate-900/95 to-slate-950/95 p-8 text-center shadow-[0_0_60px_rgba(0,240,255,0.4)]"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Subtle background flare */}
-          <div className="pointer-events-none absolute -top-24 -left-24 h-48 w-48 rounded-full bg-cyan-500/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -right-24 h-48 w-48 rounded-full bg-purple-500/20 blur-3xl" />
+          {/* Ambient glow flares */}
+          <motion.div
+            className="pointer-events-none absolute -top-32 -left-32 h-64 w-64 rounded-full bg-cyan-500/25 blur-3xl"
+            animate={{ scale: [1, 1.2, 1] }}
+            transition={{ duration: 4, repeat: Infinity }}
+          />
+          <motion.div
+            className="pointer-events-none absolute -bottom-32 -right-32 h-64 w-64 rounded-full bg-purple-500/25 blur-3xl"
+            animate={{ scale: [1.2, 1, 1.2] }}
+            transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
+          />
 
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1, rotate: [0, 10, -10, 0] }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full border-2 border-cyan-400 bg-cyan-950/60 text-4xl shadow-[0_0_20px_rgba(0,240,255,0.5)]"
+            initial={{ scale: 0, rotate: -45 }}
+            animate={{
+              scale: 1,
+              rotate: 0,
+              y: [0, -8, 0],
+            }}
+            transition={{
+              delay: 0.3,
+              duration: 0.6,
+              ease: [0.34, 1.56, 0.64, 1],
+            }}
+            className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full border-2 border-cyan-300 bg-gradient-to-br from-cyan-950/80 to-cyan-900/60 text-5xl shadow-[0_0_30px_rgba(0,240,255,0.6),inset_0_0_20px_rgba(0,240,255,0.2)]"
           >
             ⚡
           </motion.div>
 
-          <h2 className="text-3xl font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-amber-300">
-            {notification.rankChanged ? 'PROMOÇÃO DE RANK!' : 'NÍVEL AUMENTADO!'}
-          </h2>
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+            className="text-3xl font-black uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-purple-300 to-amber-200"
+          >
+            {notification.rankChanged ? '🎖️ PROMOÇÃO DE RANK!' : '⬆️ NÍVEL AUMENTADO!'}
+          </motion.h2>
 
-          <p className="mt-1 text-sm font-semibold text-slate-400">
-            SISTEMA DE EVOLUÇÃO ATIVADO
-          </p>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5, duration: 0.4 }}
+            className="mt-2 text-xs font-semibold text-cyan-300 tracking-widest"
+          >
+            ✦ SISTEMA DE EVOLUÇÃO ATIVADO ✦
+          </motion.p>
 
-          <div className="my-6 rounded-xl border border-cyan-500/20 bg-slate-900/80 p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className="my-6 rounded-xl border border-cyan-400/30 bg-gradient-to-br from-slate-900/90 to-slate-950/90 p-4 backdrop-blur-sm"
+          >
             <div className="flex items-center justify-around">
               <div>
                 <span className="text-xs uppercase text-slate-500">Nível</span>

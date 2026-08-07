@@ -4,15 +4,17 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { toast } from 'react-hot-toast'
 import { generateAIImage, GeneratedImage } from '@/lib/ai-image'
+import { useImageGallery } from '@/hooks/useImageGallery'
 
 interface ImageGeneratorProps {
-  onImageGenerated: (image: GeneratedImage) => void
+  onImageGenerated?: (image: GeneratedImage) => void
 }
 
 export function ImageGenerator({ onImageGenerated }: ImageGeneratorProps) {
   const [prompt, setPrompt] = useState('')
   const [category, setCategory] = useState('character')
   const [isGenerating, setIsGenerating] = useState(false)
+  const { addImageToGallery } = useImageGallery()
 
   const PRESETS = [
     { label: '👑 Monarca Cyberpunk', prompt: 'Solo Leveling Monarch armor glowing purple cyan eyes cyberpunk' },
@@ -28,15 +30,19 @@ export function ImageGenerator({ onImageGenerated }: ImageGeneratorProps) {
     }
 
     setIsGenerating(true)
-    const toastId = toast.loading('Gerando imagem via IA...')
+    const toastId = toast.loading('✨ Sintetizando imagem via IA...')
 
     try {
       const newImg = await generateAIImage(prompt, category)
-      toast.success('Imagem gerada com sucesso!', { id: toastId })
-      onImageGenerated(newImg)
+
+      // Sync para Firestore (galeria pública)
+      await addImageToGallery(newImg)
+
+      toast.success('🎉 Imagem gerada e salva na galeria!', { id: toastId })
+      onImageGenerated?.(newImg)
       setPrompt('')
     } catch (err) {
-      console.error(err)
+      console.error('[Image Generation]', err)
       toast.error('Erro ao gerar imagem. Tente novamente.', { id: toastId })
     } finally {
       setIsGenerating(false)
