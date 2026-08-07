@@ -61,9 +61,11 @@ export function initFirebase(): boolean {
   try {
     // Use existing app if already initialized, otherwise create new one
     app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+    console.log('[Firebase] App initialized:', app ? '✅' : '❌')
 
     // Initialize Auth (can be called multiple times safely)
     _auth = getAuth(app)
+    console.log('[Firebase] Auth initialized:', _auth ? '✅' : '❌')
 
     // Initialize Firestore with persistent cache (can be called multiple times safely)
     try {

@@ -103,6 +103,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         console.log('[Auth] ✅ Listener registered, unsubscribe:', typeof unsubscribe)
 
+        // Debug: check if currentUser is accessible directly
+        console.log('[Auth] Direct currentUser check:', auth.currentUser?.email || 'null (no active session)')
+
         // Safety timeout: if listener doesn't fire in 5s, stop loading
         timeoutId = setTimeout(() => {
           console.warn('[Auth] Listener timeout after 5s, forcing stop')
