@@ -39,9 +39,15 @@ let app: FirebaseApp | null = null
 let _auth: Auth | null = null
 let _db: Firestore | null = null
 let _googleProvider: GoogleAuthProvider | null = null
+let _initialized = false
 
 // Initialize Firebase exactly once (called from AuthProvider's useEffect)
 export function initFirebase(): boolean {
+  // Guard: already initialized, skip
+  if (_initialized) {
+    return true
+  }
+
   if (typeof window === 'undefined') {
     console.error('[Firebase] Cannot initialize outside browser')
     return false
@@ -75,6 +81,7 @@ export function initFirebase(): boolean {
     _googleProvider = new GoogleAuthProvider()
     _googleProvider.setCustomParameters({ prompt: 'select_account' })
 
+    _initialized = true
     console.log('[Firebase] Initialized successfully')
     return true
   } catch (err) {
