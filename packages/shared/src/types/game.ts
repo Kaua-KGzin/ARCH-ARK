@@ -3,7 +3,7 @@ export type Rank = 'E' | 'D' | 'C' | 'B' | 'A' | 'S' | 'SS' | 'SSS' | 'Monarch' 
 export type CharacterClass = 'Guerreiro' | 'Mago' | 'Assassino' | 'Monarca' | 'Arqueiro' | 'Curandeiro'
 
 export type MissionCategory = 'exercise' | 'study' | 'habit' | 'dungeon' | 'boss' | 'task' | 'nutrition' | 'mindfulness'
-export type MissionType = 'daily' | 'weekly' | 'monthly' | 'dungeon' | 'boss'
+export type MissionType = 'daily' | 'weekly' | 'monthly' | 'dungeon' | 'boss' | 'custom'
 export type MissionStatus = 'active' | 'completed' | 'failed' | 'locked'
 export type MissionDifficulty = 'E' | 'D' | 'C' | 'B' | 'A' | 'S'
 
@@ -182,4 +182,26 @@ export interface GameStats {
   itemsCollected: number
   weeklyXp: number
   monthlyXp: number
+}
+
+export interface LevelUpNotification {
+  show: boolean
+  playerName: string
+  previousLevel: number
+  level: number
+  previousRank: string
+  rank: string
+  rankChanged: boolean
+  xpGained: number
+  goldGained: number
+  attributeGains: Partial<Attributes>
+}
+
+export interface RewardNotification {
+  id: string
+  type: 'achievement' | 'loot' | 'boss' | 'rank-up' | 'level-up'
+  title: string
+  description: string
+  icon: string
+  rarity?: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
 }

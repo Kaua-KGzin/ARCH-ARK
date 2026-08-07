@@ -1,10 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import MissionCard from '@/components/missions/MissionCard'
-import { cn } from '@/lib/utils'
+import { cn, generateId } from '@/lib/utils'
 import { MissionType, MissionCategory, MissionDifficulty } from '@/types/game'
 
 const TABS: { id: MissionType | 'all'; label: string; icon: string }[] = [
@@ -12,6 +13,7 @@ const TABS: { id: MissionType | 'all'; label: string; icon: string }[] = [
   { id: 'daily', label: 'Diárias', icon: '☀️' },
   { id: 'weekly', label: 'Semanais', icon: '📅' },
   { id: 'monthly', label: 'Mensais', icon: '🗓️' },
+  { id: 'custom', label: 'Customizadas', icon: '✨' },
 ]
 
 const CATEGORIES = [
@@ -40,7 +42,7 @@ const XP_MAP: Record<MissionDifficulty, number> = { E: 30, D: 60, C: 120, B: 200
 const GOLD_MAP: Record<MissionDifficulty, number> = { E: 10, D: 20, C: 40, B: 70, A: 120, S: 200 }
 
 function CreateMissionModal({ onClose }: { onClose: () => void }) {
-  const { createCustomMission } = useGameStore()
+  const { addCustomMissions } = useGameStore()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<MissionCategory>('task')
@@ -53,7 +55,8 @@ function CreateMissionModal({ onClose }: { onClose: () => void }) {
 
   function handleCreate() {
     if (!title.trim()) return
-    createCustomMission({
+    addCustomMissions([{
+      id: generateId(),
       title: title.trim(),
       description: description.trim() || 'Missão personalizada',
       category,
@@ -64,7 +67,9 @@ function CreateMissionModal({ onClose }: { onClose: () => void }) {
       target: Math.max(1, parseInt(target, 10) || 1),
       unit: unit.trim() || 'vez',
       difficulty,
-    })
+      status: 'active',
+      progress: 0,
+    }])
     onClose()
   }
 
@@ -254,15 +259,23 @@ export default function MissionsPage() {
         {/* Custom Mission CTA */}
         <div className="card border-dashed border-blue-500/20 flex items-center justify-between">
           <div>
-            <div className="text-white font-semibold text-sm">Missão Personalizada</div>
-            <div className="text-gray-500 text-xs">Crie sua própria missão com recompensas personalizadas</div>
+            <div className="text-white font-semibold text-sm">✨ Missões Personalizadas</div>
+            <div className="text-gray-500 text-xs">Crie manualmente ou peça ao ARK para criar sob medida</div>
           </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="btn-secondary text-sm hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all"
-          >
-            + Nova Missão
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowCreate(true)}
+              className="btn-secondary text-sm hover:bg-blue-600 hover:text-white hover:border-blue-500 transition-all"
+            >
+              + Nova Missão
+            </button>
+            <Link
+              href="/ark"
+              className="px-4 py-2 rounded-lg text-sm font-bold bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white transition-all"
+            >
+              ✨ Criar no Ark
+            </Link>
+          </div>
         </div>
 
         {/* Filters */}

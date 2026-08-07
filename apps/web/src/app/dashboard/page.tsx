@@ -1,20 +1,48 @@
 'use client'
 
+import { useEffect } from 'react'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import XpBar from '@/components/character/XpBar'
 import MissionCard from '@/components/missions/MissionCard'
-import { getRankColor, getRankBgColor, getClassColor, getClassIcon, formatNumber, cn } from '@/lib/utils'
+import { getRankColor, getRankBgColor, getClassColor, getClassIcon, formatNumber, cn, isToday } from '@/lib/utils'
+import { generateLocalProphecy } from '@/lib/prophecy'
 import { calculateSecondaryStats } from '@/lib/xp'
 
 export default function DashboardPage() {
-  const { character, missions, stats, achievements, dungeons } = useGameStore()
+  const { character, missions, stats, achievements, dungeons, prophecy, prophecyDate, setProphecy } = useGameStore()
   const secondary = calculateSecondaryStats(character)
 
   const dailyMissions = missions.filter(m => m.type === 'daily')
   const completedToday = dailyMissions.filter(m => m.status === 'completed').length
   const unlockedAchievements = achievements.filter(a => a.isUnlocked).length
   const activeDungeons = dungeons.filter(d => d.isActive && !d.isCompleted).length
+
+  // Profecia do dia: busca via Gemini quando não há profecia de hoje (fallback local)
+  useEffect(() => {
+    if (prophecy && prophecyDate && isToday(prophecyDate)) return
+
+    let cancelled = false
+    fetch('/api/ark', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode: 'prophecy', character }),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (cancelled) return
+        if (!data.fallback && data.content) {
+          setProphecy(data.content)
+        } else {
+          setProphecy(generateLocalProphecy(character))
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setProphecy(generateLocalProphecy(character))
+      })
+
+    return () => { cancelled = true }
+  }, [prophecy, prophecyDate, character, setProphecy])
 
   return (
     <GameLayout title="Dashboard">
@@ -127,6 +155,24 @@ export default function DashboardPage() {
 
           {/* Right column */}
           <div className="space-y-6">
+            {/* Prophecy card */}
+            <div className="card relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-indigo-900/10 to-transparent" />
+              <div className="absolute -top-8 -right-8 w-40 h-40 bg-purple-600/10 rounded-full blur-3xl" />
+              <div className="relative">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-2xl">📜</span>
+                  <h3 className="text-white font-bold flex items-center gap-2">
+                    Profecia do Dia
+                    <span className="text-[10px] font-mono tracking-widest text-purple-300/80 border border-purple-500/30 bg-purple-900/30 px-1.5 py-0.5 rounded">SISTEMA ARK</span>
+                  </h3>
+                </div>
+                <p className="text-purple-100/90 italic leading-relaxed">
+                  {prophecy ?? 'Buscando a profecia do dia...'}
+                </p>
+              </div>
+            </div>
+
             {/* Streak card */}
             <div className="card relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-orange-900/10 to-transparent" />

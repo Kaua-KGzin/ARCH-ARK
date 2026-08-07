@@ -42,6 +42,28 @@ export function getRankFromLevel(level: number): Rank {
   return 'E'
 }
 
+const TITLE_LEVELS: Array<{ level: number; title: string }> = [
+  { level: 1, title: 'Iniciante' },
+  { level: 5, title: 'Aspirante' },
+  { level: 10, title: 'Caçador' },
+  { level: 20, title: 'Veterano' },
+  { level: 35, title: 'Elite' },
+  { level: 50, title: 'Mestre' },
+  { level: 75, title: 'Campeão' },
+  { level: 100, title: 'Lenda Viva' },
+  { level: 150, title: 'Monarca' },
+  { level: 200, title: 'Regente Supremo' },
+]
+
+/** Retorna o título correspondente ao nível do personagem. */
+export function getTitleForLevel(level: number): string {
+  let title = TITLE_LEVELS[0].title
+  for (const t of TITLE_LEVELS) {
+    if (level >= t.level) title = t.title
+  }
+  return title
+}
+
 export function getRankColor(rank: Rank): string {
   const colors: Record<Rank, string> = {
     E: 'text-gray-400',

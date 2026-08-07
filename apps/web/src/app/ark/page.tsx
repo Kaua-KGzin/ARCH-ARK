@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from 'react'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import { generateArkAnalysis, generateArkResponse } from '@/lib/ark-ai'
-import { ArkMessage } from '@/types/game'
+import { generateLocalProphecy } from '@/lib/prophecy'
+import { ArkMessage, Mission } from '@/types/game'
 import { cn, generateId } from '@/lib/utils'
 
 const TYPE_STYLES: Record<string, string> = {
@@ -74,11 +75,22 @@ const QUICK_QUESTIONS = [
 ]
 
 export default function ArkPage() {
-  const { character, missions, stats, arkMessages, addArkMessage } = useGameStore()
+  const {
+    character, missions, stats, arkMessages,
+    addArkMessage, addCustomMissions, setProphecy,
+  } = useGameStore()
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [initialized, setInitialized] = useState(false)
+  const [geminiEnabled, setGeminiEnabled] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    fetch('/api/ark')
+      .then(r => r.json())
+      .then(d => setGeminiEnabled(Boolean(d.enabled)))
+      .catch(() => setGeminiEnabled(false))
+  }, [])
 
   useEffect(() => {
     if (!initialized && arkMessages.length === 0) {
@@ -106,6 +118,19 @@ export default function ArkPage() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [arkMessages, isTyping])
 
+  const postArk = async (payload: Record<string, unknown>) => {
+    const res = await fetch('/api/ark', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    return res.json()
+  }
+
+  const arkReply = (content: string, type: ArkMessage['type'] = 'analysis') => {
+    addArkMessage({ id: generateId(), role: 'ark', content, timestamp: new Date().toISOString(), type })
+  }
+
   const sendMessage = async (text: string = input) => {
     if (!text.trim()) return
 
@@ -119,9 +144,94 @@ export default function ArkPage() {
     setInput('')
     setIsTyping(true)
 
+    // Pedidos de missões personalizadas → modo Gemini dedicado
+    if (/crie miss|criar miss|gera miss|gerar miss|miss[oõ]es personalizadas/i.test(text.trim())) {
+      await handleCustomMissions(text.trim())
+      setIsTyping(false)
+      return
+    }
+
+    try {
+      const data = await postArk({
+        mode: 'chat',
+        message: text.trim(),
+        character,
+        missions,
+        stats,
+      })
+      if (!data.fallback && data.content) {
+        arkReply(data.content, data.type)
+        setIsTyping(false)
+        return
+      }
+    } catch {
+      // segue para o fallback local
+    }
+
     await new Promise(r => setTimeout(r, 800 + Math.random() * 800))
-    const response = generateArkResponse(text, character)
+    const response = generateArkResponse(text, character, missions)
     addArkMessage(response)
+    setIsTyping(false)
+  }
+
+  const handleProphecy = async () => {
+    addArkMessage({ id: generateId(), role: 'user', content: '🔮 Quero a profecia de hoje', timestamp: new Date().toISOString() })
+    setIsTyping(true)
+    try {
+      const data = await postArk({ mode: 'prophecy', character })
+      if (!data.fallback && data.content) {
+        setProphecy(data.content)
+        arkReply(`📜 Profecia do Dia — ${data.content}`, 'quest')
+        setIsTyping(false)
+        return
+      }
+    } catch {
+      // fallback abaixo
+    }
+    const local = generateLocalProphecy(character)
+    setProphecy(local)
+    arkReply(`📜 Profecia do Dia — ${local}`, 'quest')
+    setIsTyping(false)
+  }
+
+  const handleCustomMissions = async (request: string) => {
+    try {
+      const data = await postArk({ mode: 'missions', character, message: request })
+      if (!data.fallback && data.missions?.length) {
+        addCustomMissions(data.missions as Mission[])
+        const list = (data.missions as Mission[])
+          .map(m => `• ${m.icon} ${m.title} (${m.xpReward} XP)`)
+          .join('\n')
+        arkReply(`${data.reply}\n\n${list}`, 'quest')
+        return
+      }
+    } catch {
+      // fallback abaixo
+    }
+    arkReply(
+      '⚠️ O Sistema não conseguiu contatar o núcleo criativo (Gemini) agora. Configure GEMINI_API_KEY no .env.local e tente novamente — ou continue com as missões padrão.',
+      'warning'
+    )
+  }
+
+  const handlePlan = async (category: 'exercise' | 'study') => {
+    const label = category === 'exercise' ? 'treino' : 'estudo'
+    addArkMessage({ id: generateId(), role: 'user', content: `📋 Monte meu plano de ${label} da semana`, timestamp: new Date().toISOString() })
+    setIsTyping(true)
+    try {
+      const data = await postArk({ mode: 'plan', character, category })
+      if (!data.fallback && data.content) {
+        arkReply(`🗺️ Plano de ${label} — ${data.content}`, 'recommendation')
+        setIsTyping(false)
+        return
+      }
+    } catch {
+      // fallback abaixo
+    }
+    arkReply(
+      `⚠️ Não foi possível gerar o plano de ${label} agora. Configure GEMINI_API_KEY no .env.local para liberar esta capacidade.`,
+      'warning'
+    )
     setIsTyping(false)
   }
 
@@ -139,8 +249,15 @@ export default function ArkPage() {
               ARK
               <span className="w-2 h-2 rounded-full bg-green-400 inline-block animate-pulse" />
               <span className="text-xs text-green-400 font-normal">ONLINE</span>
+              {geminiEnabled && (
+                <span className="text-[10px] font-bold bg-gradient-to-r from-purple-600/30 to-blue-600/30 border border-purple-500/40 text-purple-300 px-1.5 py-0.5 rounded-full">
+                  ARK-G
+                </span>
+              )}
             </div>
-            <div className="text-gray-400 text-xs">Sistema de Suporte Pessoal · Solo Leveling Protocol</div>
+            <div className="text-gray-400 text-xs">
+              {geminiEnabled ? 'Núcleo criativo conectado · Gemini' : 'Sistema de Suporte Pessoal · Solo Leveling Protocol'}
+            </div>
           </div>
           <div className="ml-auto text-right">
             <div className="text-xs text-gray-600">Monitorando</div>
@@ -186,6 +303,38 @@ export default function ArkPage() {
               {q}
             </button>
           ))}
+        </div>
+
+        {/* Ações criativas (Gemini) */}
+        <div className="flex gap-2 flex-wrap flex-shrink-0">
+          <button
+            onClick={handleProphecy}
+            disabled={isTyping}
+            className="px-3 py-1.5 rounded-full text-xs border border-purple-500/30 bg-purple-900/20 text-purple-300 hover:bg-purple-900/40 hover:border-purple-500/60 transition-all disabled:opacity-40"
+          >
+            🔮 Profecia do Dia
+          </button>
+          <button
+            onClick={() => handleCustomMissions('Crie missões desafiadoras para melhorar minha disciplina, saúde e conhecimento')}
+            disabled={isTyping}
+            className="px-3 py-1.5 rounded-full text-xs border border-blue-500/30 bg-blue-900/20 text-blue-300 hover:bg-blue-900/40 hover:border-blue-500/60 transition-all disabled:opacity-40"
+          >
+            🛠️ Crie 3 missões pra mim
+          </button>
+          <button
+            onClick={() => handlePlan('exercise')}
+            disabled={isTyping}
+            className="px-3 py-1.5 rounded-full text-xs border border-green-500/30 bg-green-900/20 text-green-300 hover:bg-green-900/40 hover:border-green-500/60 transition-all disabled:opacity-40"
+          >
+            💪 Plano de treino
+          </button>
+          <button
+            onClick={() => handlePlan('study')}
+            disabled={isTyping}
+            className="px-3 py-1.5 rounded-full text-xs border border-cyan-500/30 bg-cyan-900/20 text-cyan-300 hover:bg-cyan-900/40 hover:border-cyan-500/60 transition-all disabled:opacity-40"
+          >
+            🎓 Plano de estudo
+          </button>
         </div>
 
         {/* Input */}

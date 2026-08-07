@@ -1,5 +1,5 @@
 import { Mission, MissionCategory, Character, Attributes, Equipment } from '../types/game'
-import { calculateLevelFromXp, getRankFromLevel } from './utils'
+import { calculateLevelFromXp, getRankFromLevel, getTitleForLevel } from './utils'
 
 export const XP_REWARDS: Record<string, number> = {
   academia: 100,
@@ -78,6 +78,7 @@ export function applyXpGain(
     xpToNextLevel,
     totalXp: newTotalXp,
     rank: newRank,
+    title: getTitleForLevel(level),
     attributes: newAttributes,
   }
 
