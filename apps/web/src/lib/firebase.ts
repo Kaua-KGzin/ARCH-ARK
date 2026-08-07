@@ -28,18 +28,12 @@ const firebaseConfig = {
 }
 
 // Inicialização Singleton — evita múltiplas instâncias em hot-reload do Next.js
-// Safe initialization: ignora erros durante build/SSR
 let app: FirebaseApp
 try {
   app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
 } catch (err) {
-  // Durante build ou SSR sem credenciais válidas, falha silenciosamente
-  if (typeof window === 'undefined') {
-    console.warn('[Firebase] Initialized without valid credentials (build/SSR mode)')
-    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
-  } else {
-    throw err
-  }
+  console.error('[Firebase] Initialization error:', err)
+  throw err
 }
 
 // Auth

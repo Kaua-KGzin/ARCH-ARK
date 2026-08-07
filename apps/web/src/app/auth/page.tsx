@@ -1,6 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+// Força renderização apenas no cliente (evita erro Firebase no build/SSR)
+import { useEffect, useState } from 'react'
+
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 import { motion, AnimatePresence } from 'framer-motion'
 import { toast } from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
