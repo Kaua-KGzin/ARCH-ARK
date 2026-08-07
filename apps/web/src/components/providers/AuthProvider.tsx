@@ -61,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return () => unsubscribe()
     }
-  }, [isInitialized, loadGameStateFromFirestore])
+  }, [isInitialized]) // ONLY isInitialized, not loadGameStateFromFirestore (it's captured in closure)
 
   // Show error screen if Firebase isn't configured
   if (!isFirebaseConfigured) {
