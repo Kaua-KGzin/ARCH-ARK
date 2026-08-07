@@ -1,21 +1,18 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
-import { auth, signOut } from '@/lib/firebase'
-import { onAuthStateChanged, updateEmail, updatePassword, User, sendPasswordResetEmail } from 'firebase/auth'
+import { signOut, updateEmail, updatePassword, sendPasswordResetEmail } from 'firebase/auth'
+import { useAuth } from '@/hooks/useAuth'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 
 export default function ProfilePage() {
   const router = useRouter()
+  const { user, loading: authLoading } = useAuth()
   const { character } = useGameStore()
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
   const [currentTab, setCurrentTab] = useState<'info' | 'security' | 'preferences'>('info')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -26,39 +23,10 @@ export default function ProfilePage() {
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
 
   useEffect(() => {
-    let isMounted = true
-
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (u) => {
-        if (!isMounted) return
-        if (!u) {
-          router.push('/auth')
-        } else {
-          setUser(u)
-          setNewEmail(u.email || '')
-          setLoading(false)
-        }
-      },
-      (error) => {
-        if (!isMounted) return
-        console.warn('[Profile] Auth error:', error)
-        router.push('/auth')
-      }
-    )
-
-    const timeout = setTimeout(() => {
-      if (isMounted) {
-        setLoading(false)
-      }
-    }, 5000)
-
-    return () => {
-      isMounted = false
-      unsubscribe()
-      clearTimeout(timeout)
+    if (!authLoading && user) {
+      setNewEmail(user.email || '')
     }
-  }, [router])
+  }, [user, authLoading])
 
   const handleUpdateEmail = async () => {
     if (!user || !newEmail.includes('@')) {
@@ -106,7 +74,11 @@ export default function ProfilePage() {
     if (!user?.email) return
     setIsSaving(true)
     try {
-      await sendPasswordResetEmail(auth, user.email)
+      const { getFirebaseAuth } = await import('@/lib/firebase')
+      const auth = getFirebaseAuth()
+      if (auth) {
+        await sendPasswordResetEmail(auth, user.email)
+      }
       toast.success('E-mail de recuperação enviado!')
     } catch (err: any) {
       toast.error(err.message || 'Erro ao enviar e-mail de recuperação')
@@ -117,7 +89,11 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth)
+      const { getFirebaseAuth } = await import('@/lib/firebase')
+      const auth = getFirebaseAuth()
+      if (auth) {
+        await signOut(auth)
+      }
       toast.success('Desconectado com sucesso!')
       router.push('/auth')
     } catch (err) {
@@ -125,7 +101,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading) {
+  if (authLoading) {
     return (
       <GameLayout title="Perfil">
         <div className="flex items-center justify-center py-20">

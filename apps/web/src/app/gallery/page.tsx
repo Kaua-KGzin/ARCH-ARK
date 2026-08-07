@@ -1,27 +1,23 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import GameLayout from '@/components/layout/GameLayout'
 import { ImageGenerator } from '@/components/feed/ImageGenerator'
 import { ImageFeed } from '@/components/feed/ImageFeed'
-import { AuthModal } from '@/components/auth/AuthModal'
 import { getCachedImages, DEMO_FEED_IMAGES, GeneratedImage } from '@/lib/ai-image'
-import { auth, signOut, User } from '@/lib/firebase'
+import { signOut } from '@/lib/firebase'
+import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'react-hot-toast'
 
 export default function GalleryPage() {
+  const router = useRouter()
+  const { user } = useAuth()
   const [images, setImages] = useState<GeneratedImage[]>([])
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
-  const [isAuthOpen, setIsAuthOpen] = useState(false)
 
   useEffect(() => {
     const cached = getCachedImages()
     setImages(cached.length > 0 ? cached : DEMO_FEED_IMAGES)
-
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setCurrentUser(user)
-    })
-    return () => unsubscribe()
   }, [])
 
   const handleImageGenerated = (newImg: GeneratedImage) => {
@@ -30,10 +26,16 @@ export default function GalleryPage() {
 
   const handleSignOut = async () => {
     try {
-      await signOut(auth)
+      const { getFirebaseAuth } = await import('@/lib/firebase')
+      const auth = getFirebaseAuth()
+      if (auth) {
+        await signOut(auth)
+      }
       toast.success('Desconectado com sucesso.')
+      router.push('/auth')
     } catch (e) {
       console.error(e)
+      toast.error('Erro ao desconectar')
     }
   }
 
@@ -55,14 +57,14 @@ export default function GalleryPage() {
           </div>
 
           <div>
-            {currentUser ? (
+            {user ? (
               <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl p-3">
                 <div className="h-9 w-9 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center font-bold text-cyan-300">
-                  {currentUser.email?.[0].toUpperCase() || 'U'}
+                  {user.email?.[0].toUpperCase() || 'U'}
                 </div>
                 <div>
                   <p className="text-xs font-bold text-white truncate max-w-[140px]">
-                    {currentUser.displayName || currentUser.email}
+                    {user.displayName || user.email}
                   </p>
                   <button
                     onClick={handleSignOut}
@@ -73,12 +75,7 @@ export default function GalleryPage() {
                 </div>
               </div>
             ) : (
-              <button
-                onClick={() => setIsAuthOpen(true)}
-                className="btn-primary text-xs py-3 px-5 tracking-wider uppercase"
-              >
-                🔐 ENTRAR / CADASTRAR (FIREBASE)
-              </button>
+              <p className="text-xs text-slate-400">Login é obrigatório para acessar a galeria</p>
             )}
           </div>
         </div>
@@ -88,13 +85,6 @@ export default function GalleryPage() {
 
         {/* AI Community Feed */}
         <ImageFeed />
-
-        {/* Auth Modal */}
-        <AuthModal
-          isOpen={isAuthOpen}
-          onClose={() => setIsAuthOpen(false)}
-          onSuccess={(u) => setCurrentUser(u)}
-        />
       </div>
     </GameLayout>
   )

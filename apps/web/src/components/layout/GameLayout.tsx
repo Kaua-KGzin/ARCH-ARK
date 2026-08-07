@@ -3,6 +3,7 @@
 import { useGameStore } from '@/store/useGameStore'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { useRankReset } from '@/hooks/useRankReset'
+import { useFirestoreAutosave } from '@/hooks/useFirestoreAutosave'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import { LevelUpModal } from '../effects/LevelUpModal'
@@ -30,6 +31,9 @@ export default function GameLayout({ children, title }: GameLayoutProps) {
 
   // Rank reset logic
   useRankReset()
+
+  // Firestore autosave (only when user is in game)
+  useFirestoreAutosave(user?.uid)
 
   // Daily reset on mount
   if (!loading && isOnboarded) {

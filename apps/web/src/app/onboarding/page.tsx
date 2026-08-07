@@ -1,13 +1,11 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
-import { auth, signOut } from '@/lib/firebase'
-import { onAuthStateChanged } from 'firebase/auth'
+import { signOut } from '@/lib/firebase'
+import { useAuth } from '@/hooks/useAuth'
 import { useGameStore } from '@/store/useGameStore'
 import type { CharacterClass } from '@arch-ark/shared'
 
@@ -22,48 +20,22 @@ const CHARACTER_CLASSES: { name: CharacterClass; icon: string; desc: string }[] 
 
 export default function OnboardingPage() {
   const router = useRouter()
-  const { character, setupCharacter, isOnboarded } = useGameStore()
+  const { user, loading: authLoading } = useAuth()
+  const { setupCharacter, isOnboarded } = useGameStore()
   const [step, setStep] = useState(1)
   const [characterName, setCharacterName] = useState('')
   const [selectedClass, setSelectedClass] = useState<CharacterClass | null>(null)
-  const [loading, setLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Verifica autenticação
+  // Gate: check auth state
   useEffect(() => {
-    let isMounted = true
-
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      (user) => {
-        if (!isMounted) return
-        if (!user) {
-          router.push('/auth')
-        } else if (isOnboarded) {
-          router.push('/dashboard')
-        } else {
-          setLoading(false)
-        }
-      },
-      (error) => {
-        if (!isMounted) return
-        console.warn('[Onboarding] Auth error:', error)
-        router.push('/auth')
-      }
-    )
-
-    const timeout = setTimeout(() => {
-      if (isMounted && !isOnboarded) {
-        setLoading(false)
-      }
-    }, 5000)
-
-    return () => {
-      isMounted = false
-      unsubscribe()
-      clearTimeout(timeout)
+    if (authLoading) return
+    if (!user) {
+      router.replace('/auth')
+    } else if (isOnboarded) {
+      router.replace('/dashboard')
     }
-  }, [router, isOnboarded])
+  }, [user, authLoading, isOnboarded, router])
 
   const handleCreateCharacter = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -87,7 +59,11 @@ export default function OnboardingPage() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth)
+      const { getFirebaseAuth } = await import('@/lib/firebase')
+      const auth = getFirebaseAuth()
+      if (auth) {
+        await signOut(auth)
+      }
       toast.success('Desconectado')
       router.push('/auth')
     } catch (err) {
@@ -95,7 +71,7 @@ export default function OnboardingPage() {
     }
   }
 
-  if (loading) {
+  if (authLoading || !user || !isOnboarded) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-cyan-950/20 to-slate-950 flex items-center justify-center">
         <motion.div
