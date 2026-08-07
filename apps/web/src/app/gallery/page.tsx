@@ -87,7 +87,7 @@ export default function GalleryPage() {
         <ImageGenerator onImageGenerated={handleImageGenerated} />
 
         {/* AI Community Feed */}
-        <ImageFeed images={images} />
+        <ImageFeed />
 
         {/* Auth Modal */}
         <AuthModal

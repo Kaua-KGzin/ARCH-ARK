@@ -19,16 +19,28 @@ import {
 } from 'firebase/firestore'
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-key-arch-ark',
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || 'link-89720.firebaseapp.com',
   projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || 'link-89720',
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || 'link-89720.firebasestorage.app',
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || '944023340985',
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || '1:944023340985:web:demo123456789',
 }
 
 // Inicialização Singleton — evita múltiplas instâncias em hot-reload do Next.js
-const app: FirebaseApp = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+// Safe initialization: ignora erros durante build/SSR
+let app: FirebaseApp
+try {
+  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+} catch (err) {
+  // Durante build ou SSR sem credenciais válidas, falha silenciosamente
+  if (typeof window === 'undefined') {
+    console.warn('[Firebase] Initialized without valid credentials (build/SSR mode)')
+    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig)
+  } else {
+    throw err
+  }
+}
 
 // Auth
 export const auth: Auth = getAuth(app)

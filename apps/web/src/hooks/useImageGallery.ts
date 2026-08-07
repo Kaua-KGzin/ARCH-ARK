@@ -15,6 +15,11 @@ export function useImageGallery() {
 
   // Listener para carregar imagens públicas do Firestore (Free Tier: máx 50)
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      setLoading(false)
+      return
+    }
+
     try {
       const imagesRef = collection(db, 'ai_gallery')
       const q = query(
@@ -23,15 +28,22 @@ export function useImageGallery() {
         limit(50)
       )
 
-      const unsubscribe = onSnapshot(q, (snap) => {
-        const data = snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-          createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        })) as GeneratedImage[]
-        setImages(data)
-        setLoading(false)
-      })
+      const unsubscribe = onSnapshot(
+        q,
+        (snap) => {
+          const data = snap.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+            createdAt: doc.data().createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          })) as GeneratedImage[]
+          setImages(data)
+          setLoading(false)
+        },
+        (err) => {
+          console.warn('[Image Gallery] Firestore error:', err)
+          setLoading(false)
+        }
+      )
 
       return () => unsubscribe()
     } catch (err) {

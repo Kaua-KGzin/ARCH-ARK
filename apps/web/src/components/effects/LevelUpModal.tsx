@@ -134,7 +134,7 @@ export function LevelUpModal({ notification, onClose }: LevelUpModalProps) {
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
 
           <button
             onClick={onClose}
