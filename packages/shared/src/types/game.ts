@@ -49,6 +49,7 @@ export interface Character {
   longestStreak: number
   lastActivityDate: string | null
   gold: number
+  rankResetDate?: string // Data do próximo reset de rank (ISO format)
 }
 
 export interface Item {

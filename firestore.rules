@@ -12,37 +12,40 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
-    // Regras de Usuários / Personagens (ARCH-ARK)
+    // ===== ESTRUTURA PRINCIPAL: users/{userId} =====
     match /users/{userId} {
+      // Leitura/escrita do documento raiz do usuário
       allow read, write: if isOwner(userId);
-    }
 
-    match /characters/{userId} {
-      allow read, write: if isOwner(userId);
-    }
+      // Subcoleção: game-state (estado completo do jogo)
+      match /game-state/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
 
-    match /user_stats/{userId} {
-      allow read, write: if isOwner(userId);
-    }
+      // Subcoleção: character (dados do personagem)
+      match /character/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
 
-    // Regras para Missions do Usuário
-    match /users/{userId}/missions/{missionId} {
-      allow read, write: if isOwner(userId);
-    }
+      // Subcoleção: inventory (itens do inventário)
+      match /inventory/{itemId} {
+        allow read, write: if isOwner(userId);
+      }
 
-    // Regras para Achievements do Usuário
-    match /users/{userId}/achievements/{achievementId} {
-      allow read, write: if isOwner(userId);
-    }
+      // Subcoleção: missions (missões do usuário)
+      match /missions/{missionId} {
+        allow read, write: if isOwner(userId);
+      }
 
-    // Regras para Skills do Usuário
-    match /users/{userId}/skills/{skillId} {
-      allow read, write: if isOwner(userId);
-    }
+      // Subcoleção: achievements (conquistas desbloqueadas)
+      match /achievements/{achievementId} {
+        allow read, write: if isOwner(userId);
+      }
 
-    // Regras para Inventory do Usuário
-    match /users/{userId}/inventory/{itemId} {
-      allow read, write: if isOwner(userId);
+      // Subcoleção: skills (habilidades do personagem)
+      match /skills/{skillId} {
+        allow read, write: if isOwner(userId);
+      }
     }
 
     // Regras para Imagens Geradas por IA / Comunidade
