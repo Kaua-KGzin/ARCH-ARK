@@ -1,15 +1,17 @@
 'use client'
 
-import { ReactNode, useEffect, useState, createContext, useCallback } from 'react'
+import { ReactNode, useEffect, useState, createContext } from 'react'
 import { User } from 'firebase/auth'
+import { doc, getDoc } from 'firebase/firestore'
 import { Toaster } from 'react-hot-toast'
 import {
   initFirebase,
   isFirebaseConfigured,
   onAuthStateChanged,
   getFirebaseAuth,
+  getFirebaseDb,
 } from '@/lib/firebase'
-import { useFirestoreLoad } from '@/hooks/useFirestoreLoad'
+import { useGameStore } from '@/store/useGameStore'
 
 export interface AuthContextType {
   user: User | null
@@ -23,7 +25,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [isInitialized, setIsInitialized] = useState(false)
-  const { loadGameStateFromFirestore } = useFirestoreLoad()
 
   useEffect(() => {
     // Initialize Firebase once on mount
@@ -49,10 +50,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // On login, load game state from Firestore imperatively
         if (currentUser) {
           try {
-            await loadGameStateFromFirestore(currentUser.uid)
+            const db = getFirebaseDb()
+            if (db) {
+              const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
+              const snap = await getDoc(gameStateRef)
+
+              if (snap.exists()) {
+                const data = snap.data()
+                console.log('[Firestore] Loading game state for user:', currentUser.uid)
+
+                useGameStore.setState({
+                  character: data.character || useGameStore.getState().character,
+                  inventory: data.inventory || useGameStore.getState().inventory,
+                  equipment: data.equipment || useGameStore.getState().equipment,
+                  missions: data.missions || useGameStore.getState().missions,
+                  achievements: data.achievements || useGameStore.getState().achievements,
+                  skills: data.skills || useGameStore.getState().skills,
+                  titles: data.titles || useGameStore.getState().titles,
+                  stats: data.stats || useGameStore.getState().stats,
+                  isOnboarded: data.isOnboarded !== undefined ? data.isOnboarded : useGameStore.getState().isOnboarded,
+                })
+                console.log('[Firestore] ✅ Game state loaded')
+              } else {
+                console.log('[Firestore] No saved state, using localStorage')
+              }
+            }
           } catch (err) {
             console.warn('[Auth] Failed to load Firestore state:', err)
-            // Fallback to localStorage is automatic via Zustand persist middleware
           }
         }
 
@@ -61,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return () => unsubscribe()
     }
-  }, [isInitialized]) // ONLY isInitialized, not loadGameStateFromFirestore (it's captured in closure)
+  }, [isInitialized])
 
   // Show error screen if Firebase isn't configured
   if (!isFirebaseConfigured) {
