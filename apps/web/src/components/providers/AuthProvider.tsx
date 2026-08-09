@@ -50,9 +50,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log('[Auth] Setting up listener...')
       let timeoutId: NodeJS.Timeout | null = null
+      let unsubscribe: (() => void) | null = null
 
       try {
-        const unsubscribe = onAuthStateChanged(
+        unsubscribe = onAuthStateChanged(
           auth,
           async (currentUser) => {
             console.log('[Auth] Listener fired:', currentUser?.email || 'logged out')
@@ -108,7 +109,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         )
 
-        console.log('[Auth] ✅ Listener registered, unsubscribe type:', typeof unsubscribe)
+        console.log('[Auth] ✅ Listener registered')
         console.log('[Auth] Direct currentUser check:', auth.currentUser?.email || 'null (no active session)')
 
         // Fallback: if listener doesn't fire quickly, manually check currentUser
@@ -149,18 +150,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           setLoading(false)
           timeoutId = null
-        }, 1000)
-
-        return () => {
-          if (timeoutId) clearTimeout(timeoutId)
-          unsubscribe()
-        }
+        }, 500)
       } catch (err) {
         console.error('[Auth] Failed to register listener:', err)
         setLoading(false)
       }
+
+      // Cleanup function - properly outside of if block
+      return () => {
+        console.log('[Auth] Cleaning up listener')
+        if (timeoutId) clearTimeout(timeoutId)
+        if (unsubscribe) unsubscribe()
+      }
     }
-  }, [isInitialized])
+  }, [])
 
   // Show error screen if Firebase isn't configured
   if (!isFirebaseConfigured) {
