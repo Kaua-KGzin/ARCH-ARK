@@ -92,6 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  // Debug: log render state
+  console.log('[Auth] RENDER: loading=', loading, 'user=', user?.email, 'isConfigured=', isFirebaseConfigured)
+
   // Show error screen if Firebase isn't configured
   if (!isFirebaseConfigured) {
     return (
