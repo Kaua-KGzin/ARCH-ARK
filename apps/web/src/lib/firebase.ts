@@ -15,6 +15,7 @@ import {
 import {
   getFirestore,
   Firestore,
+  enableNetwork,
 } from 'firebase/firestore'
 
 // Pure config — no SDK calls, safe to read anywhere (even in render body)
@@ -66,9 +67,13 @@ export function initFirebase(): boolean {
 
     // Initialize Firestore (can be called multiple times safely)
     try {
-      // Try without persistent cache first to debug offline issue
       _db = getFirestore(app)
       console.log('[Firebase] Firestore initialized:', _db ? '✅' : '❌')
+
+      // Ensure Firestore is connected to the network
+      enableNetwork(_db).catch((err) => {
+        console.warn('[Firebase] enableNetwork failed (may already be enabled):', err)
+      })
     } catch (err) {
       console.error('[Firebase] Firestore init failed:', err)
     }
