@@ -4,6 +4,7 @@ import { useGameStore } from '@/store/useGameStore'
 import { useRequireAuth } from '@/hooks/useRequireAuth'
 import { useRankReset } from '@/hooks/useRankReset'
 import { useFirestoreAutosave } from '@/hooks/useFirestoreAutosave'
+import { useFirestoreLoad } from '@/hooks/useFirestoreLoad'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import { LevelUpModal } from '../effects/LevelUpModal'
@@ -28,6 +29,9 @@ export default function GameLayout({ children, title }: GameLayoutProps) {
 
   // Gate: check auth + onboarded, redirect if needed
   const { user, loading, isOnboarded } = useRequireAuth()
+
+  // Load game state from Firestore on mount
+  useFirestoreLoad(user?.uid)
 
   // Rank reset logic
   useRankReset()
