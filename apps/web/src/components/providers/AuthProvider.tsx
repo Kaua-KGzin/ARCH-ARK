@@ -53,17 +53,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         unsubscribe = onAuthStateChanged(
           auth,
           (currentUser) => {
-            console.log('[Auth] Listener fired:', currentUser?.email || 'logged out')
+            try {
+              console.log('[Auth] Listener fired:', currentUser?.email || 'logged out')
 
-            if (timeoutId) {
-              clearTimeout(timeoutId)
-              timeoutId = null
+              if (timeoutId) {
+                clearTimeout(timeoutId)
+                timeoutId = null
+              }
+
+              console.log('[Auth] About to call setUser')
+              setUser(currentUser)
+              console.log('[Auth] setUser called, about to call setLoading')
+              setLoading(false)
+              console.log('[Auth] setLoading called, listener done')
+            } catch (err) {
+              console.error('[Auth] ERROR in listener:', err)
             }
-
-            console.log('[Auth] Setting user and stopping loading...')
-            setUser(currentUser)
-            setLoading(false)
-            console.log('[Auth] Loading should now be false')
           },
           (error) => {
             console.error('[Auth] Listener error:', error)
