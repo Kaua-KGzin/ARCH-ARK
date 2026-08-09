@@ -30,6 +30,8 @@ export default function GameLayout({ children, title }: GameLayoutProps) {
   // Gate: check auth + onboarded, redirect if needed
   const { user, loading, isOnboarded } = useRequireAuth()
 
+  console.log('[GameLayout] user:', user?.email, 'loading:', loading, 'isOnboarded:', isOnboarded)
+
   // Load game state from Firestore on mount
   useFirestoreLoad(user?.uid)
 

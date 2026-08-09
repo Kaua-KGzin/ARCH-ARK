@@ -7,7 +7,11 @@ import { getFirebaseDb } from '@/lib/firebase'
 
 export function useFirestoreLoad(userId: string | undefined) {
   useEffect(() => {
-    if (!userId) return
+    console.log('[FirestoreLoad] Hook called with userId:', userId)
+    if (!userId) {
+      console.log('[FirestoreLoad] No userId, skipping')
+      return
+    }
 
     const loadGameState = async () => {
       try {
