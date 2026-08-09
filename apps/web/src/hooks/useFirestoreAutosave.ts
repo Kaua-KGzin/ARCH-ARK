@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import { doc, writeBatch, Timestamp } from 'firebase/firestore'
 import { useGameStore } from '@/store/useGameStore'
 import { getFirebaseDb } from '@/lib/firebase'
@@ -13,17 +13,32 @@ export function useFirestoreAutosave(userId: string | undefined) {
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastSyncRef = useRef<number>(0)
 
-  const gameState = useGameStore((state) => ({
-    character: state.character,
-    inventory: state.inventory,
-    equipment: state.equipment,
-    missions: state.missions,
-    achievements: state.achievements,
-    skills: state.skills,
-    titles: state.titles,
-    stats: state.stats,
-    isOnboarded: state.isOnboarded,
-  }))
+  const gameState = useGameStore(
+    (state) => ({
+      character: state.character,
+      inventory: state.inventory,
+      equipment: state.equipment,
+      missions: state.missions,
+      achievements: state.achievements,
+      skills: state.skills,
+      titles: state.titles,
+      stats: state.stats,
+      isOnboarded: state.isOnboarded,
+    }),
+    (a, b) => {
+      return (
+        a.character === b.character &&
+        a.inventory === b.inventory &&
+        a.equipment === b.equipment &&
+        a.missions === b.missions &&
+        a.achievements === b.achievements &&
+        a.skills === b.skills &&
+        a.titles === b.titles &&
+        a.stats === b.stats &&
+        a.isOnboarded === b.isOnboarded
+      )
+    }
+  )
 
   useEffect(() => {
     if (!userId) return
