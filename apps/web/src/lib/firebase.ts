@@ -13,9 +13,6 @@ import {
   Auth,
 } from 'firebase/auth'
 import {
-  initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
   getFirestore,
   Firestore,
 } from 'firebase/firestore'
@@ -67,16 +64,13 @@ export function initFirebase(): boolean {
     _auth = getAuth(app)
     console.log('[Firebase] Auth initialized:', _auth ? '✅' : '❌')
 
-    // Initialize Firestore with persistent cache (can be called multiple times safely)
+    // Initialize Firestore (can be called multiple times safely)
     try {
-      _db = initializeFirestore(app, {
-        localCache: persistentLocalCache({
-          tabManager: persistentMultipleTabManager(),
-        }),
-      })
-    } catch {
-      // Already initialized (e.g., hot reload) — fallback to getFirestore
+      // Try without persistent cache first to debug offline issue
       _db = getFirestore(app)
+      console.log('[Firebase] Firestore initialized:', _db ? '✅' : '❌')
+    } catch (err) {
+      console.error('[Firebase] Firestore init failed:', err)
     }
 
     // Initialize Google provider

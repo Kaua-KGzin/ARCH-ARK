@@ -71,6 +71,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const db = getFirebaseDb()
                 console.log('[Firestore] DB instance:', db ? '✅ obtained' : '❌ null')
                 if (db) {
+                  // Give Firestore a moment to be ready for network operations
+                  await new Promise(r => setTimeout(r, 200))
+
                   console.log('[Firestore] Fetching state for user:', currentUser.uid)
                   const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
                   const snap = await getDoc(gameStateRef)
@@ -126,6 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const db = getFirebaseDb()
               console.log('[Fallback] DB instance:', db ? '✅ obtained' : '❌ null')
               if (db) {
+                await new Promise(r => setTimeout(r, 200))
                 const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
                 const snap = await getDoc(gameStateRef)
                 if (snap.exists()) {
