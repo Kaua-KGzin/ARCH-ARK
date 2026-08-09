@@ -69,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (currentUser) {
               try {
                 const db = getFirebaseDb()
+                console.log('[Firestore] DB instance:', db ? '✅ obtained' : '❌ null')
                 if (db) {
                   console.log('[Firestore] Fetching state for user:', currentUser.uid)
                   const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
@@ -123,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Load game state
             try {
               const db = getFirebaseDb()
+              console.log('[Fallback] DB instance:', db ? '✅ obtained' : '❌ null')
               if (db) {
                 const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
                 const snap = await getDoc(gameStateRef)
