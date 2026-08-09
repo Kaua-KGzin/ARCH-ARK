@@ -52,58 +52,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let timeoutId: NodeJS.Timeout | null = null
 
       try {
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-        console.log('[Auth] Listener fired:', currentUser?.email || 'logged out')
+        const unsubscribe = onAuthStateChanged(
+          auth,
+          async (currentUser) => {
+            console.log('[Auth] Listener fired:', currentUser?.email || 'logged out')
 
-        if (timeoutId) {
-          clearTimeout(timeoutId)
-          timeoutId = null
-        }
-
-        setUser(currentUser)
-
-        // On login, load game state from Firestore imperatively
-        if (currentUser) {
-          try {
-            const db = getFirebaseDb()
-            if (db) {
-              console.log('[Firestore] Fetching state for user:', currentUser.uid)
-              const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
-              const snap = await getDoc(gameStateRef)
-
-              if (snap.exists()) {
-                const data = snap.data()
-                console.log('[Firestore] Document found, loading state...')
-
-                useGameStore.setState({
-                  character: data.character || useGameStore.getState().character,
-                  inventory: data.inventory || useGameStore.getState().inventory,
-                  equipment: data.equipment || useGameStore.getState().equipment,
-                  missions: data.missions || useGameStore.getState().missions,
-                  achievements: data.achievements || useGameStore.getState().achievements,
-                  skills: data.skills || useGameStore.getState().skills,
-                  titles: data.titles || useGameStore.getState().titles,
-                  stats: data.stats || useGameStore.getState().stats,
-                  isOnboarded: data.isOnboarded !== undefined ? data.isOnboarded : useGameStore.getState().isOnboarded,
-                })
-                console.log('[Firestore] ✅ Game state loaded')
-              } else {
-                console.log('[Firestore] No saved state, using localStorage')
-              }
-            } else {
-              console.warn('[Firestore] DB not available')
+            if (timeoutId) {
+              clearTimeout(timeoutId)
+              timeoutId = null
             }
-          } catch (err) {
-            console.warn('[Auth] Failed to load Firestore state:', err)
+
+            setUser(currentUser)
+
+            // On login, load game state from Firestore imperatively
+            if (currentUser) {
+              try {
+                const db = getFirebaseDb()
+                if (db) {
+                  console.log('[Firestore] Fetching state for user:', currentUser.uid)
+                  const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
+                  const snap = await getDoc(gameStateRef)
+
+                  if (snap.exists()) {
+                    const data = snap.data()
+                    console.log('[Firestore] Document found, loading state...')
+
+                    useGameStore.setState({
+                      character: data.character || useGameStore.getState().character,
+                      inventory: data.inventory || useGameStore.getState().inventory,
+                      equipment: data.equipment || useGameStore.getState().equipment,
+                      missions: data.missions || useGameStore.getState().missions,
+                      achievements: data.achievements || useGameStore.getState().achievements,
+                      skills: data.skills || useGameStore.getState().skills,
+                      titles: data.titles || useGameStore.getState().titles,
+                      stats: data.stats || useGameStore.getState().stats,
+                      isOnboarded: data.isOnboarded !== undefined ? data.isOnboarded : useGameStore.getState().isOnboarded,
+                    })
+                    console.log('[Firestore] ✅ Game state loaded')
+                  } else {
+                    console.log('[Firestore] No saved state, using localStorage')
+                  }
+                } else {
+                  console.warn('[Firestore] DB not available')
+                }
+              } catch (err) {
+                console.warn('[Auth] Failed to load Firestore state:', err)
+              }
+            }
+
+            setLoading(false)
+          },
+          (error) => {
+            console.error('[Auth] Listener error:', error)
+            setLoading(false)
           }
-        }
+        )
 
-        setLoading(false)
-        })
-
-        console.log('[Auth] ✅ Listener registered, unsubscribe:', typeof unsubscribe)
-
-        // Debug: check if currentUser is accessible directly
+        console.log('[Auth] ✅ Listener registered, unsubscribe type:', typeof unsubscribe)
         console.log('[Auth] Direct currentUser check:', auth.currentUser?.email || 'null (no active session)')
 
         // Safety timeout: if listener doesn't fire in 5s, stop loading
@@ -118,7 +123,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           unsubscribe()
         }
       } catch (err) {
-        console.error('[Auth] Failed to set up listener:', err)
+        console.error('[Auth] Failed to register listener:', err)
         setLoading(false)
       }
     }
