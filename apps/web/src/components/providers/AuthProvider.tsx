@@ -60,8 +60,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               timeoutId = null
             }
 
+            console.log('[Auth] Setting user and stopping loading...')
             setUser(currentUser)
             setLoading(false)
+            console.log('[Auth] Loading should now be false')
           },
           (error) => {
             console.error('[Auth] Listener error:', error)
