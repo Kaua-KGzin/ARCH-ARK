@@ -111,12 +111,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('[Auth] ✅ Listener registered, unsubscribe type:', typeof unsubscribe)
         console.log('[Auth] Direct currentUser check:', auth.currentUser?.email || 'null (no active session)')
 
-        // Safety timeout: if listener doesn't fire in 5s, stop loading
-        timeoutId = setTimeout(() => {
-          console.warn('[Auth] Listener timeout after 5s, forcing stop')
+        // Fallback: if listener doesn't fire quickly, manually check currentUser
+        timeoutId = setTimeout(async () => {
+          console.warn('[Auth] Listener slow, using manual currentUser check as fallback')
+          const currentUser = auth.currentUser
+          console.log('[Auth] Fallback: currentUser =', currentUser?.email || 'null')
+
+          if (currentUser) {
+            setUser(currentUser)
+            // Load game state
+            try {
+              const db = getFirebaseDb()
+              if (db) {
+                const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
+                const snap = await getDoc(gameStateRef)
+                if (snap.exists()) {
+                  useGameStore.setState({
+                    character: snap.data().character || useGameStore.getState().character,
+                    inventory: snap.data().inventory || useGameStore.getState().inventory,
+                    equipment: snap.data().equipment || useGameStore.getState().equipment,
+                    missions: snap.data().missions || useGameStore.getState().missions,
+                    achievements: snap.data().achievements || useGameStore.getState().achievements,
+                    skills: snap.data().skills || useGameStore.getState().skills,
+                    titles: snap.data().titles || useGameStore.getState().titles,
+                    stats: snap.data().stats || useGameStore.getState().stats,
+                    isOnboarded: snap.data().isOnboarded !== undefined ? snap.data().isOnboarded : useGameStore.getState().isOnboarded,
+                  })
+                  console.log('[Firestore] ✅ Game state loaded (fallback)')
+                }
+              }
+            } catch (err) {
+              console.warn('[Auth] Fallback Firestore load failed:', err)
+            }
+          } else {
+            console.log('[Auth] Fallback: No user logged in')
+          }
+
           setLoading(false)
           timeoutId = null
-        }, 5000)
+        }, 1000)
 
         return () => {
           if (timeoutId) clearTimeout(timeoutId)
