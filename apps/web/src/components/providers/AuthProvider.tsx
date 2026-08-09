@@ -2,16 +2,13 @@
 
 import { ReactNode, useEffect, useState, createContext } from 'react'
 import { User } from 'firebase/auth'
-import { doc, getDoc } from 'firebase/firestore'
 import { Toaster } from 'react-hot-toast'
 import {
   initFirebase,
   isFirebaseConfigured,
   onAuthStateChanged,
   getFirebaseAuth,
-  getFirebaseDb,
 } from '@/lib/firebase'
-import { useGameStore } from '@/store/useGameStore'
 
 export interface AuthContextType {
   user: User | null
@@ -55,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         unsubscribe = onAuthStateChanged(
           auth,
-          async (currentUser) => {
+          (currentUser) => {
             console.log('[Auth] Listener fired:', currentUser?.email || 'logged out')
 
             if (timeoutId) {
@@ -64,47 +61,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             }
 
             setUser(currentUser)
-
-            // On login, load game state from Firestore imperatively
-            if (currentUser) {
-              try {
-                const db = getFirebaseDb()
-                console.log('[Firestore] DB instance:', db ? '✅ obtained' : '❌ null')
-                if (db) {
-                  // Give Firestore a moment to be ready for network operations
-                  await new Promise(r => setTimeout(r, 500))
-
-                  console.log('[Firestore] Fetching state for user:', currentUser.uid)
-                  const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
-                  const snap = await getDoc(gameStateRef)
-
-                  if (snap.exists()) {
-                    const data = snap.data()
-                    console.log('[Firestore] Document found, loading state...')
-
-                    useGameStore.setState({
-                      character: data.character || useGameStore.getState().character,
-                      inventory: data.inventory || useGameStore.getState().inventory,
-                      equipment: data.equipment || useGameStore.getState().equipment,
-                      missions: data.missions || useGameStore.getState().missions,
-                      achievements: data.achievements || useGameStore.getState().achievements,
-                      skills: data.skills || useGameStore.getState().skills,
-                      titles: data.titles || useGameStore.getState().titles,
-                      stats: data.stats || useGameStore.getState().stats,
-                      isOnboarded: data.isOnboarded !== undefined ? data.isOnboarded : useGameStore.getState().isOnboarded,
-                    })
-                    console.log('[Firestore] ✅ Game state loaded')
-                  } else {
-                    console.log('[Firestore] No saved state, using localStorage')
-                  }
-                } else {
-                  console.warn('[Firestore] DB not available')
-                }
-              } catch (err) {
-                console.warn('[Auth] Failed to load Firestore state:', err)
-              }
-            }
-
             setLoading(false)
           },
           (error) => {
@@ -115,48 +71,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         console.log('[Auth] ✅ Listener registered')
         console.log('[Auth] Direct currentUser check:', auth.currentUser?.email || 'null (no active session)')
-
-        // Fallback: if listener doesn't fire quickly, manually check currentUser
-        timeoutId = setTimeout(async () => {
-          console.warn('[Auth] Listener slow, using manual currentUser check as fallback')
-          const currentUser = auth.currentUser
-          console.log('[Auth] Fallback: currentUser =', currentUser?.email || 'null')
-
-          if (currentUser) {
-            setUser(currentUser)
-            // Load game state
-            try {
-              const db = getFirebaseDb()
-              console.log('[Fallback] DB instance:', db ? '✅ obtained' : '❌ null')
-              if (db) {
-                await new Promise(r => setTimeout(r, 500))
-                const gameStateRef = doc(db, 'users', currentUser.uid, 'game-state', 'main')
-                const snap = await getDoc(gameStateRef)
-                if (snap.exists()) {
-                  useGameStore.setState({
-                    character: snap.data().character || useGameStore.getState().character,
-                    inventory: snap.data().inventory || useGameStore.getState().inventory,
-                    equipment: snap.data().equipment || useGameStore.getState().equipment,
-                    missions: snap.data().missions || useGameStore.getState().missions,
-                    achievements: snap.data().achievements || useGameStore.getState().achievements,
-                    skills: snap.data().skills || useGameStore.getState().skills,
-                    titles: snap.data().titles || useGameStore.getState().titles,
-                    stats: snap.data().stats || useGameStore.getState().stats,
-                    isOnboarded: snap.data().isOnboarded !== undefined ? snap.data().isOnboarded : useGameStore.getState().isOnboarded,
-                  })
-                  console.log('[Firestore] ✅ Game state loaded (fallback)')
-                }
-              }
-            } catch (err) {
-              console.warn('[Auth] Fallback Firestore load failed:', err)
-            }
-          } else {
-            console.log('[Auth] Fallback: No user logged in')
-          }
-
-          setLoading(false)
-          timeoutId = null
-        }, 500)
       } catch (err) {
         console.error('[Auth] Failed to register listener:', err)
         setLoading(false)
