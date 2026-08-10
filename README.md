@@ -23,7 +23,9 @@ Web app único, responsivo e instalável (PWA) — a mesma base cobre desktop e 
 | 🏆 **Ranking global** | Leaderboard real entre jogadores, via RPC pública do Supabase |
 | 🤖 **Ark AI** | Assistente que analisa seu desempenho, alerta sobre inatividade e recomenda treinos |
 | 🔥 **Streak** | Sequência de dias consecutivos de atividade, com bônus de XP progressivos |
-| 🖼️ **Galeria de IA** | Geração e feed comunitário de imagens em tempo real (Supabase Realtime) |
+| 📈 **Estatísticas** | Gráficos de evolução de XP, atributos e categorias mais treinadas (recharts) |
+| ⚙️ **Configurações** | Temas visuais, efeitos sonoros e modo compacto de missões |
+| ✨ **Missões personalizadas** | Crie suas próprias missões manualmente ou peça ao Ark |
 
 ---
 
@@ -46,7 +48,7 @@ Monorepo com **npm workspaces**:
 
 - **Auth**: e-mail/senha + Google OAuth
 - **`characters`**: colunas granulares (nível, XP, rank, atributos...) para leaderboard/queries + `game_data` jsonb com o restante do estado do jogo (missões, inventário, conquistas, masmorras, skills, títulos)
-- **`profiles`**, **`ark_messages`**, **`gallery_images`**: RLS por usuário em tudo
+- **`profiles`**, **`ark_messages`**: RLS por usuário em tudo
 - **`get_leaderboard()`**: RPC pública (`security definer`) que expõe só as colunas não sensíveis do ranking
 
 ### Gate de autenticação (sem loading infinito)
@@ -127,8 +129,9 @@ Deploy automático na Vercel a cada push em `main`. Configure as env vars do Sup
 | `/character` | Detalhes do personagem e atributos |
 | `/skills` | Habilidades desbloqueadas |
 | `/ranking` | Ranking global de jogadores |
-| `/gallery` | Galeria de imagens de IA |
+| `/stats` | Gráficos de evolução e estatísticas |
 | `/loja` | Loja de itens |
+| `/settings` | Tema, som, partículas, missões compactas |
 | `/profile` | Configurações de conta |
 
 ---

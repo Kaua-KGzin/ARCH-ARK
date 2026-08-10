@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { signOut } from '@/lib/auth-actions'
@@ -299,9 +300,13 @@ export default function ProfilePage() {
 
               {currentTab === 'preferences' && (
                 <div className="space-y-4">
-                  <div className="text-slate-400 text-sm">
-                    As preferências de som, tema e layout estão disponíveis no menu de configurações dentro do jogo.
-                  </div>
+                  <Link
+                    href="/settings"
+                    className="flex items-center justify-between rounded-lg bg-cyan-500/10 border border-cyan-500/30 px-4 py-3 text-sm text-cyan-300 hover:bg-cyan-500/20 transition-all"
+                  >
+                    <span>⚙️ Som, tema e partículas</span>
+                    <span>→</span>
+                  </Link>
                   <div className="pt-4 border-t border-slate-800">
                     <p className="text-xs font-bold text-slate-400 uppercase mb-2">Área de Perigo</p>
                     <button

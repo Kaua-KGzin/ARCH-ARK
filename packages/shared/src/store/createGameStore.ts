@@ -18,6 +18,12 @@ import { SYSTEM_TITLES } from '../lib/titles'
 
 
 export const CURRENT_CONTENT_VERSION = 2
+const XP_HISTORY_LIMIT = 200
+
+function appendXpHistory(history: { date: string; amount: number }[], amount: number) {
+  if (amount <= 0) return history
+  return [...history, { date: new Date().toISOString(), amount }].slice(-XP_HISTORY_LIMIT)
+}
 
 const initialCreatedAt = new Date().toISOString()
 const STARTER_LOADOUT = createStarterLoadout(initialCreatedAt)
@@ -50,6 +56,11 @@ const DEFAULT_CHARACTER: Character = {
   gold: 100,
 }
 
+export interface XpHistoryEntry {
+  date: string
+  amount: number
+}
+
 export interface GameState {
   character: Character
   missions: Mission[]
@@ -63,6 +74,8 @@ export interface GameState {
   settings: UserSettings
   arkMessages: ArkMessage[]
   stats: GameStats
+  /** Log de ganhos de XP (data + quantidade), usado para gráficos de evolução. Capado nas últimas 200 entradas. */
+  xpHistory: XpHistoryEntry[]
   isOnboarded: boolean
   lastDailyReset: string | null
   levelUpNotification: LevelUpNotification | null
@@ -145,6 +158,7 @@ export function createGameStore(options: GameStoreOptions = {}) {
           weeklyXp: 0,
           monthlyXp: 0,
         },
+        xpHistory: [],
         isOnboarded: false,
         lastDailyReset: null,
         levelUpNotification: null,
@@ -322,6 +336,7 @@ export function createGameStore(options: GameStoreOptions = {}) {
             } : state.levelUpNotification,
             achievementNotification: newlyUnlocked || state.achievementNotification,
             rewardNotifications: [...state.rewardNotifications, ...rewardNotifications],
+            xpHistory: appendXpHistory(state.xpHistory, xpEarned),
           })
         },
 
@@ -360,6 +375,7 @@ export function createGameStore(options: GameStoreOptions = {}) {
               goldGained: 0,
               attributeGains,
             } : state.levelUpNotification,
+            xpHistory: appendXpHistory(state.xpHistory, amount),
           })
         },
 
@@ -503,6 +519,7 @@ export function createGameStore(options: GameStoreOptions = {}) {
                 attributeGains,
               } : state.levelUpNotification,
               rewardNotifications: [...state.rewardNotifications, ...rewardNotifications],
+              xpHistory: appendXpHistory(state.xpHistory, updatedDungeon.xpReward),
             }
           })
         },
@@ -575,6 +592,7 @@ export function createGameStore(options: GameStoreOptions = {}) {
                 attributeGains,
               } : state.levelUpNotification,
               rewardNotifications: [...state.rewardNotifications, ...rewardNotifications],
+              xpHistory: appendXpHistory(state.xpHistory, updatedBoss.xpReward),
             }
           })
         },
@@ -673,6 +691,7 @@ export function createGameStore(options: GameStoreOptions = {}) {
             contentVersion: CURRENT_CONTENT_VERSION,
             prophecy: base.prophecy ?? null,
             prophecyDate: base.prophecyDate ?? null,
+            xpHistory: base.xpHistory ?? [],
             rewardNotifications: base.rewardNotifications ?? [],
             levelUpNotification:
               base.levelUpNotification && 'playerName' in base.levelUpNotification
@@ -693,6 +712,7 @@ export function createGameStore(options: GameStoreOptions = {}) {
           settings: state.settings,
           arkMessages: state.arkMessages,
           stats: state.stats,
+          xpHistory: state.xpHistory,
           isOnboarded: state.isOnboarded,
           lastDailyReset: state.lastDailyReset,
           prophecy: state.prophecy,

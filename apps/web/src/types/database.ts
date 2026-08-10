@@ -114,39 +114,6 @@ export type Database = {
         }
         Relationships: []
       }
-      gallery_images: {
-        Row: {
-          author_name: string
-          category: string
-          created_at: string
-          id: string
-          likes: number
-          prompt: string
-          url: string
-          user_id: string
-        }
-        Insert: {
-          author_name?: string
-          category?: string
-          created_at?: string
-          id?: string
-          likes?: number
-          prompt: string
-          url: string
-          user_id: string
-        }
-        Update: {
-          author_name?: string
-          category?: string
-          created_at?: string
-          id?: string
-          likes?: number
-          prompt?: string
-          url?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string

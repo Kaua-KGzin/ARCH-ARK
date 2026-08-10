@@ -13,9 +13,10 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/ark', label: 'ARK IA', icon: '🤖', primary: true },
   { href: '/character', label: 'Personagem', icon: '👤' },
   { href: '/skills', label: 'Habilidades', icon: '✨' },
-  { href: '/gallery', label: 'Galeria IA', icon: '🖼️' },
   { href: '/inventory', label: 'Inventário', icon: '🎒' },
   { href: '/loja', label: 'Loja', icon: '🏪' },
   { href: '/achievements', label: 'Conquistas', icon: '🏆' },
   { href: '/ranking', label: 'Ranking', icon: '📊' },
+  { href: '/stats', label: 'Estatísticas', icon: '📈' },
+  { href: '/settings', label: 'Configurações', icon: '⚙️' },
 ]
