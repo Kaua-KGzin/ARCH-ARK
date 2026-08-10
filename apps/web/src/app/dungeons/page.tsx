@@ -91,7 +91,11 @@ function DungeonCard({ dungeon }: { dungeon: Dungeon }) {
         <div className="px-5 pb-5 border-t border-[#1a1a2e] pt-4 space-y-3">
           <div className="text-xs text-gray-500 font-mono mb-2">MISSÕES DA DUNGEON</div>
           {dungeon.missions.map(m => (
-            <MissionCard key={m.id} mission={m} />
+            <MissionCard
+              key={m.id}
+              mission={m}
+              onComplete={(missionId) => completeDungeonMission(dungeon.id, missionId)}
+            />
           ))}
 
           {dungeon.isActive && progress === total && !dungeon.isCompleted && (
@@ -120,6 +124,7 @@ function DungeonCard({ dungeon }: { dungeon: Dungeon }) {
 }
 
 function BossCard({ boss }: { boss: Boss }) {
+  const completeBossMission = useGameStore((state) => state.completeBossMission)
   const [expanded, setExpanded] = useState(false)
   const hpPct = (boss.hp / boss.maxHp) * 100
   const missionsDone = boss.missions.filter(m => m.status === 'completed').length
@@ -166,7 +171,13 @@ function BossCard({ boss }: { boss: Boss }) {
       {expanded && (
         <div className="px-5 pb-5 border-t border-[#1a1a2e] pt-4 space-y-3">
           <div className="text-xs text-gray-500 font-mono mb-2">MISSÕES DO BOSS ({missionsDone}/{boss.missions.length})</div>
-          {boss.missions.map(m => <MissionCard key={m.id} mission={m} />)}
+          {boss.missions.map(m => (
+            <MissionCard
+              key={m.id}
+              mission={m}
+              onComplete={(missionId) => completeBossMission(boss.id, missionId)}
+            />
+          ))}
         </div>
       )}
     </div>

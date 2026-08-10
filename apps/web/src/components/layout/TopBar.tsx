@@ -3,7 +3,7 @@
 import { useGameStore } from '@/store/useGameStore'
 
 export default function TopBar({ title }: { title: string }) {
-  const { character, stats } = useGameStore()
+  const { character } = useGameStore()
 
   return (
     <header className="h-14 md:h-16 bg-[#0d0d1a]/80 backdrop-blur-sm border-b border-[#1a1a2e] flex items-center justify-between px-3 md:px-6 sticky top-0 z-30">

@@ -5,7 +5,7 @@
 // de outro usuário. Cacheia só assets estáticos versionados pelo Next.
 const STATIC_CACHE = 'arch-ark-static-v1'
 
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting()
 })
 

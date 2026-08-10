@@ -2,7 +2,7 @@
 
 import { Mission } from '@/types/game'
 import { useGameStore } from '@/store/useGameStore'
-import { cn, getRankBgColor } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { useState } from 'react'
 
 const CATEGORY_COLORS: Record<Mission['category'], string> = {
@@ -25,8 +25,16 @@ const DIFFICULTY_COLORS: Record<string, string> = {
   S: 'text-yellow-400 border-yellow-500',
 }
 
-export default function MissionCard({ mission }: { mission: Mission }) {
-  const { completeMission, updateMissionProgress } = useGameStore()
+interface MissionCardProps {
+  mission: Mission
+  /** Missões de dungeon/boss vivem aninhadas, não em state.missions — o
+   * caller passa o handler certo (completeDungeonMission/completeBossMission).
+   * Sem isso, cai no completeMission padrão (missões soltas). */
+  onComplete?: (missionId: string) => void
+}
+
+export default function MissionCard({ mission, onComplete }: MissionCardProps) {
+  const completeMission = useGameStore((state) => state.completeMission)
   const [completing, setCompleting] = useState(false)
 
   const isCompleted = mission.status === 'completed'
@@ -35,7 +43,7 @@ export default function MissionCard({ mission }: { mission: Mission }) {
   const handleComplete = async () => {
     if (isCompleted || completing) return
     setCompleting(true)
-    completeMission(mission.id)
+    ;(onComplete ?? completeMission)(mission.id)
     setTimeout(() => setCompleting(false), 1000)
   }
 

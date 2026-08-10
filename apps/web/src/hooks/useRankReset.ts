@@ -43,7 +43,8 @@ export function useRankReset() {
         { duration: 5000 }
       )
     }
-  }, [character.id]) // Executa uma vez por novo character
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intencional: roda 1x por personagem, não a cada XP ganho
+  }, [character.id])
 
   return {
     daysUntilReset: daysUntilRankReset(character),

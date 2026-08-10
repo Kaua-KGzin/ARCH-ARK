@@ -15,7 +15,7 @@ export function getCachedImages(): GeneratedImage[] {
   try {
     const raw = localStorage.getItem(IMAGE_CACHE_KEY)
     return raw ? JSON.parse(raw) : []
-  } catch (e) {
+  } catch {
     return []
   }
 }
