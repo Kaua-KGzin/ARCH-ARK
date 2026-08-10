@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import type { Database } from '@/types/database'
 
 const AUTH_ROUTE = '/auth'
+const AUTH_CALLBACK_ROUTE = '/auth/callback'
 const ONBOARDING_ROUTE = '/onboarding'
 const HOME_ROUTE = '/dashboard'
 
@@ -12,6 +13,14 @@ const HOME_ROUTE = '/dashboard'
 const PUBLIC_ROUTES = new Set(['/', '/auth'])
 
 export async function updateSession(request: NextRequest) {
+  // The OAuth callback has to reach its route handler untouched. At this
+  // point the session does not exist yet — creating it by exchanging the
+  // `code` is precisely what that handler does — so gating it here would
+  // bounce the user back to /auth and silently break Google sign-in.
+  if (request.nextUrl.pathname === AUTH_CALLBACK_ROUTE) {
+    return NextResponse.next({ request })
+  }
+
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient<Database>(
