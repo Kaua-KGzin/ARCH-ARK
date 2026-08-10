@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 import { useImageGallery } from '@/hooks/useImageGallery'
 
 export function ImageFeed() {
@@ -92,7 +92,7 @@ export function ImageFeed() {
                 {/* Info Container */}
                 <div className="p-4">
                   <p className="line-clamp-2 text-xs font-medium text-slate-300">
-                    "{img.prompt}"
+                    &ldquo;{img.prompt}&rdquo;
                   </p>
 
                   <div className="mt-3 flex items-center justify-between border-t border-slate-800/80 pt-3">

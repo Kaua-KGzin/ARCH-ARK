@@ -8,7 +8,7 @@ import {
   daysUntilRankReset,
   calculateNextResetDate,
 } from '@/lib/rank-reset'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 
 /**
  * Hook que verifica e aplica rank reset automático

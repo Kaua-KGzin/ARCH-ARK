@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 import { generateAIImage, GeneratedImage } from '@/lib/ai-image'
 import { useImageGallery } from '@/hooks/useImageGallery'
 
@@ -35,7 +35,6 @@ export function ImageGenerator({ onImageGenerated }: ImageGeneratorProps) {
     try {
       const newImg = await generateAIImage(prompt, category)
 
-      // Sync para Firestore (galeria pública)
       await addImageToGallery(newImg)
 
       toast.success('🎉 Imagem gerada e salva na galeria!', { id: toastId })

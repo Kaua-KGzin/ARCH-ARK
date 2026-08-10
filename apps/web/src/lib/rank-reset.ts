@@ -77,7 +77,7 @@ export function formatResetDate(rankResetDate?: string): string {
     return 'Hoje ou antes'
   }
 
-  const daysLeft = daysUntilRankReset({ rankResetDate } as any)
+  const daysLeft = Math.ceil((date.getTime() - today.getTime()) / (24 * 60 * 60 * 1000))
   if (daysLeft === 0) return 'Hoje'
   if (daysLeft === 1) return 'Amanhã'
   if (daysLeft < 30) return `${daysLeft} dias`
