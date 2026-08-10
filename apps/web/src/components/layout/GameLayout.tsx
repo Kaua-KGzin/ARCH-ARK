@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/useGameStore'
 import { useRankReset } from '@/hooks/useRankReset'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
+import MobileNav from './MobileNav'
 import { LevelUpModal } from '../effects/LevelUpModal'
 import AchievementToast from '../effects/AchievementToast'
 import { ManaParticles } from '../effects/ManaParticles'
@@ -39,6 +40,7 @@ export default function GameLayout({ children, title }: GameLayoutProps) {
         <TopBar title={title} />
         <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 overflow-auto">{children}</main>
       </div>
+      <MobileNav />
       <LevelUpModal notification={levelUpNotification} onClose={clearLevelUpNotification} />
       <FloatingText notifications={rewardNotifications} onDismiss={dismissRewardNotification} />
       <AchievementToast />

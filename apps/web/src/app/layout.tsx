@@ -3,6 +3,7 @@ import { Toaster } from 'sonner'
 import './globals.css'
 import { AuthProvider } from '@/components/providers/AuthProvider'
 import { GameSyncProvider } from '@/components/providers/GameSyncProvider'
+import { PwaRegister } from '@/components/providers/PwaRegister'
 import { createClient } from '@/lib/supabase/server'
 import { fetchCharacterRow, rowToGameState } from '@/lib/supabase/game-sync'
 
@@ -11,7 +12,6 @@ export const metadata: Metadata = {
   description:
     'O sistema de Solo Leveling para a vida real. Transforme exercícios, estudos e hábitos em XP, itens e evolução de personagem.',
   manifest: '/manifest.webmanifest',
-  icons: { icon: '/favicon.ico', apple: '/icons/icon-192.png' },
   appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'ARCH ARK' },
 }
 
@@ -38,6 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AuthProvider initialUser={user}>
           <GameSyncProvider userId={user?.id ?? null} initialState={initialState}>
             <Toaster theme="dark" position="top-right" richColors closeButton />
+            <PwaRegister />
             {children}
           </GameSyncProvider>
         </AuthProvider>
