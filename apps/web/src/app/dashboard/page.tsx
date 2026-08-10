@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect } from 'react'
-import { motion } from 'framer-motion'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import XpBar from '@/components/character/XpBar'
@@ -107,7 +106,12 @@ export default function DashboardPage() {
           {[
             { label: 'Missões Completas', value: stats.totalMissionsCompleted, icon: '✅', color: 'text-green-400' },
             { label: 'Conquistas', value: `${unlockedAchievements}/${achievements.length}`, icon: '🏆', color: 'text-yellow-400' },
-            { label: 'Dungeons', value: `${stats.dungeonsCleared}`, icon: '🏰', color: 'text-purple-400' },
+            {
+              label: activeDungeons > 0 ? `Dungeons (${activeDungeons} ativa${activeDungeons > 1 ? 's' : ''})` : 'Dungeons',
+              value: `${stats.dungeonsCleared}`,
+              icon: '🏰',
+              color: 'text-purple-400',
+            },
             { label: 'Bosses Derrotados', value: stats.bossesDefeated, icon: '👹', color: 'text-red-400' },
           ].map(stat => (
             <div key={stat.label} className="card">

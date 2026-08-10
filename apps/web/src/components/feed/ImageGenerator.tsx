@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 import { generateAIImage, GeneratedImage } from '@/lib/ai-image'
 import { useImageGallery } from '@/hooks/useImageGallery'
 
@@ -17,9 +16,9 @@ export function ImageGenerator({ onImageGenerated }: ImageGeneratorProps) {
   const { addImageToGallery } = useImageGallery()
 
   const PRESETS = [
-    { label: '👑 Monarca Cyberpunk', prompt: 'Solo Leveling Monarch armor glowing purple cyan eyes cyberpunk' },
-    { label: '⚔️ Relíquia Lendária', prompt: 'Legendary Monarch sword dark flame aura ultra detailed artifact' },
-    { label: '🏰 Core da Masmorra', prompt: 'Futuristic red portal dungeon entrance abyss monarch system' },
+    { label: '👑 Monarca Cyberpunk', prompt: 'Solo Leveling Monarch armor glowing purple cyan eyes cyberpunk', category: 'character' },
+    { label: '⚔️ Relíquia Lendária', prompt: 'Legendary Monarch sword dark flame aura ultra detailed artifact', category: 'relic' },
+    { label: '🏰 Core da Masmorra', prompt: 'Futuristic red portal dungeon entrance abyss monarch system', category: 'dungeon' },
   ]
 
   const handleGenerate = async (e: React.FormEvent) => {
@@ -35,7 +34,6 @@ export function ImageGenerator({ onImageGenerated }: ImageGeneratorProps) {
     try {
       const newImg = await generateAIImage(prompt, category)
 
-      // Sync para Firestore (galeria pública)
       await addImageToGallery(newImg)
 
       toast.success('🎉 Imagem gerada e salva na galeria!', { id: toastId })
@@ -78,7 +76,7 @@ export function ImageGenerator({ onImageGenerated }: ImageGeneratorProps) {
             <button
               key={idx}
               type="button"
-              onClick={() => setPrompt(p.prompt)}
+              onClick={() => { setPrompt(p.prompt); setCategory(p.category) }}
               className="rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-1 text-xs text-slate-300 hover:border-cyan-500/40 hover:text-cyan-300 transition-all"
             >
               {p.label}

@@ -49,7 +49,7 @@ Você fala português brasileiro. Persona: sério, estratégico, motivador, enxu
 Você tem acesso aos dados do caçador (personagem) e DEVE usá-los para respostas personalizadas.
 Respostas curtas (2 a 4 frases), sem listas longas. Nunca quebre a persona. Nunca mencione que é um modelo de IA genérico.`
 
-function buildCharacterContext(character: Character, missions?: Mission[]): string {
+function buildCharacterContext(character: Character, missions?: Mission[], stats?: GameStats): string {
   const active = missions?.filter(m => m.status === 'active').length ?? 0
   const completed = missions?.filter(m => m.status === 'completed').length ?? 0
   return JSON.stringify({
@@ -66,6 +66,14 @@ function buildCharacterContext(character: Character, missions?: Mission[]): stri
     atributos: character.attributes,
     missoesAtivas: active,
     missoesCompletadas: completed,
+    ...(stats && {
+      xpSemanal: stats.weeklyXp,
+      xpMensal: stats.monthlyXp,
+      masmorrasConcluidas: stats.dungeonsCleared,
+      bossesDerrotados: stats.bossesDefeated,
+      minutosExercicioTotal: stats.totalExerciseMinutes,
+      minutosEstudoTotal: stats.totalStudyMinutes,
+    }),
   })
 }
 
@@ -81,7 +89,7 @@ export async function arkChat(
   missions?: Mission[],
   stats?: GameStats
 ): Promise<ArkChatResult | null> {
-  const context = buildCharacterContext(character, missions)
+  const context = buildCharacterContext(character, missions, stats)
   const prompt =
     `Dados do caçador: ${context}\n` +
     `Pergunta/mensagem do caçador: "${message}"\n` +

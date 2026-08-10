@@ -1,36 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import GameLayout from '@/components/layout/GameLayout'
 import { ImageGenerator } from '@/components/feed/ImageGenerator'
 import { ImageFeed } from '@/components/feed/ImageFeed'
-import { getCachedImages, DEMO_FEED_IMAGES, GeneratedImage } from '@/lib/ai-image'
-import { signOut } from '@/lib/firebase'
+import { signOut } from '@/lib/auth-actions'
 import { useAuth } from '@/hooks/useAuth'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 
 export default function GalleryPage() {
   const router = useRouter()
   const { user } = useAuth()
-  const [images, setImages] = useState<GeneratedImage[]>([])
-
-  useEffect(() => {
-    const cached = getCachedImages()
-    setImages(cached.length > 0 ? cached : DEMO_FEED_IMAGES)
-  }, [])
-
-  const handleImageGenerated = (newImg: GeneratedImage) => {
-    setImages((prev) => [newImg, ...prev])
-  }
 
   const handleSignOut = async () => {
     try {
-      const { getFirebaseAuth } = await import('@/lib/firebase')
-      const auth = getFirebaseAuth()
-      if (auth) {
-        await signOut(auth)
-      }
+      await signOut()
       toast.success('Desconectado com sucesso.')
       router.push('/auth')
     } catch (e) {
@@ -52,7 +36,7 @@ export default function GalleryPage() {
               GALERIA VIRTUAL & FEED DE IMAGENS
             </h1>
             <p className="text-sm text-slate-400 mt-1 max-w-xl">
-              Gere artes com Inteligência Artificial, gerencie suas capturas de masmorras e sincronize com o Firebase Auth.
+              Gere artes com Inteligência Artificial, gerencie suas capturas de masmorras e sincronize com sua conta.
             </p>
           </div>
 
@@ -64,7 +48,7 @@ export default function GalleryPage() {
                 </div>
                 <div>
                   <p className="text-xs font-bold text-white truncate max-w-[140px]">
-                    {user.displayName || user.email}
+                    {(user.user_metadata?.username as string | undefined) || user.email}
                   </p>
                   <button
                     onClick={handleSignOut}
@@ -81,7 +65,7 @@ export default function GalleryPage() {
         </div>
 
         {/* AI Image Generator */}
-        <ImageGenerator onImageGenerated={handleImageGenerated} />
+        <ImageGenerator />
 
         {/* AI Community Feed */}
         <ImageFeed />
