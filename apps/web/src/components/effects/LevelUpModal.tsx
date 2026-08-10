@@ -1,7 +1,10 @@
 'use client'
 
+import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { LevelUpNotification } from '@arch-ark/shared'
+import { useGameStore } from '@/store/useGameStore'
+import { playSoundIfEnabled } from '@/lib/sound'
 
 interface LevelUpModalProps {
   notification: LevelUpNotification | null
@@ -9,6 +12,15 @@ interface LevelUpModalProps {
 }
 
 export function LevelUpModal({ notification, onClose }: LevelUpModalProps) {
+  const soundEnabled = useGameStore((state) => state.settings.soundEnabled)
+
+  useEffect(() => {
+    if (notification?.show) {
+      playSoundIfEnabled(notification.rankChanged ? 'rankup' : 'levelup', soundEnabled)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só deve disparar quando a notificação muda, não a cada toggle de som
+  }, [notification])
+
   if (!notification || !notification.show) return null
 
   return (

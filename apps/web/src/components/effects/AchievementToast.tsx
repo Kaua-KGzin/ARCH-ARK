@@ -4,15 +4,18 @@ import { useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '@/store/useGameStore'
 import { getRarityColor } from '@/lib/utils'
+import { playSoundIfEnabled } from '@/lib/sound'
 
 export default function AchievementToast() {
-  const { achievementNotification, clearAchievementNotification } = useGameStore()
+  const { achievementNotification, clearAchievementNotification, settings } = useGameStore()
 
   useEffect(() => {
     if (achievementNotification) {
+      playSoundIfEnabled('loot', settings.soundEnabled)
       const t = setTimeout(clearAchievementNotification, 6000)
       return () => clearTimeout(t)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só deve disparar quando a notificação muda, não a cada toggle de som
   }, [achievementNotification, clearAchievementNotification])
 
   return (

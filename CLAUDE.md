@@ -56,7 +56,7 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 
 Auth (e-mail/senha + Google OAuth) e persistência em Postgres. Tabelas: `profiles`,
 `characters` (colunas granulares + `game_data` jsonb com o resto do estado do jogo),
-`ark_messages`, `gallery_images` — todas com RLS por usuário. `get_leaderboard()` é
+`ark_messages` — todas com RLS por usuário. `get_leaderboard()` é
 uma RPC pública (`security definer`) que expõe só as colunas não sensíveis para o
 ranking.
 

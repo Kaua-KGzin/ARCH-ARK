@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import { usePathname } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '@/store/useGameStore'
 import { useRankReset } from '@/hooks/useRankReset'
 import Sidebar from './Sidebar'
@@ -25,6 +27,7 @@ export default function GameLayout({ children, title }: GameLayoutProps) {
     dismissRewardNotification,
     settings,
   } = useGameStore()
+  const pathname = usePathname()
 
   useRankReset()
 
@@ -38,7 +41,19 @@ export default function GameLayout({ children, title }: GameLayoutProps) {
       <Sidebar />
       <div className="flex-1 flex flex-col md:ml-64 z-10">
         <TopBar title={title} />
-        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 overflow-auto">{children}</main>
+        <main className="flex-1 p-4 md:p-6 pb-24 md:pb-6 overflow-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={pathname}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
+        </main>
       </div>
       <MobileNav />
       <LevelUpModal notification={levelUpNotification} onClose={clearLevelUpNotification} />

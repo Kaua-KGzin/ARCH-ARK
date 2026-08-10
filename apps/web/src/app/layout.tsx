@@ -4,6 +4,7 @@ import './globals.css'
 import { AuthProvider } from '@/components/providers/AuthProvider'
 import { GameSyncProvider } from '@/components/providers/GameSyncProvider'
 import { PwaRegister } from '@/components/providers/PwaRegister'
+import { ThemeApplier } from '@/components/providers/ThemeApplier'
 import { createClient } from '@/lib/supabase/server'
 import { fetchCharacterRow, rowToGameState } from '@/lib/supabase/game-sync'
 
@@ -39,6 +40,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <GameSyncProvider userId={user?.id ?? null} initialState={initialState}>
             <Toaster theme="dark" position="top-right" richColors closeButton />
             <PwaRegister />
+            <ThemeApplier />
             {children}
           </GameSyncProvider>
         </AuthProvider>

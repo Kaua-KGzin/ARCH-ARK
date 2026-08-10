@@ -20,6 +20,7 @@ type GameDataBlob = Pick<
   | 'skills'
   | 'titles'
   | 'stats'
+  | 'xpHistory'
   | 'isOnboarded'
   | 'lastDailyReset'
   | 'prophecy'
@@ -69,6 +70,7 @@ export function stateToRow(userId: string, state: GameState): TablesInsert<'char
     skills: state.skills,
     titles: state.titles,
     stats: state.stats,
+    xpHistory: state.xpHistory,
     isOnboarded: state.isOnboarded,
     lastDailyReset: state.lastDailyReset,
     prophecy: state.prophecy,
