@@ -15,5 +15,8 @@
   "devDependencies": {
     "ajv": "^8.20.0",
     "vercel": "^58.8.0"
+  },
+  "dependencies": {
+    "sonner": "^2.0.8"
   }
 }

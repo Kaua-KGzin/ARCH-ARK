@@ -5,11 +5,6 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useGameStore } from '@/store/useGameStore'
 import { useRankReset } from '@/hooks/useRankReset'
-<<<<<<< HEAD
-import { useFirestoreAutosave } from '@/hooks/useFirestoreAutosave'
-import { useFirestoreLoad } from '@/hooks/useFirestoreLoad'
-=======
->>>>>>> 9af05d9ff57d4bf4c20a33b57a2cb8231fd558f9
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import MobileNav from './MobileNav'
@@ -34,18 +29,6 @@ export default function GameLayout({ children, title }: GameLayoutProps) {
   } = useGameStore()
   const pathname = usePathname()
 
-<<<<<<< HEAD
-  // Gate: check auth + onboarded, redirect if needed
-  const { user, loading, isOnboarded } = useRequireAuth()
-
-  console.log('[GameLayout] user:', user?.email, 'loading:', loading, 'isOnboarded:', isOnboarded)
-
-  // Load game state from Firestore on mount
-  useFirestoreLoad(user?.uid)
-
-  // Rank reset logic
-=======
->>>>>>> 9af05d9ff57d4bf4c20a33b57a2cb8231fd558f9
   useRankReset()
 
   useEffect(() => {
