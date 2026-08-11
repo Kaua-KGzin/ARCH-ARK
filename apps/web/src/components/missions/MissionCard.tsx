@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/useGameStore'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { playSoundIfEnabled } from '@/lib/sound'
+import { Badge, Card } from '@/components/ui'
 
 const CATEGORY_COLORS: Record<Mission['category'], string> = {
   exercise: 'text-red-400',
@@ -52,19 +53,22 @@ export default function MissionCard({ mission, onComplete }: MissionCardProps) {
   }
 
   return (
-    <div
+    <Card
+      interactive={!isCompleted}
+      glow={isCompleted ? 'green' : 'cyan'}
       className={cn(
         'mission-card relative overflow-hidden',
-        compact && 'py-2.5',
-        isCompleted && 'opacity-60'
+        compact && 'py-2.5 px-3',
+        isCompleted && 'opacity-70 border-neon-green border-opacity-60',
+        completing && 'animate-glitch'
       )}
       onClick={!isCompleted ? handleComplete : undefined}
     >
-      {/* Completed overlay */}
+      {/* Completed checkmark */}
       {isCompleted && (
-        <div className="absolute inset-0 bg-green-900/10 rounded-xl flex items-center justify-center z-10">
-          <div className="bg-green-500/20 rounded-full p-2 border border-green-500/40">
-            <span className="text-green-400 text-xl">✓</span>
+        <div className="absolute inset-0 bg-neon-green/5 flex items-center justify-center z-10 pointer-events-none">
+          <div className="bg-neon-green/20 rounded-full p-2 border border-neon-green/50">
+            <span className="text-neon-green text-xl font-bold">✓</span>
           </div>
         </div>
       )}
@@ -73,12 +77,17 @@ export default function MissionCard({ mission, onComplete }: MissionCardProps) {
         <div className={cn('mt-0.5', compact ? 'text-lg' : 'text-2xl')}>{mission.icon}</div>
         <div className="flex-1 min-w-0">
           <div className={cn('flex items-center gap-2', compact ? 'mb-0' : 'mb-1')}>
-            <span className={cn('text-white font-semibold', compact ? 'text-xs' : 'text-sm')}>{mission.title}</span>
-            <span className={cn('text-xs font-bold border rounded px-1', DIFFICULTY_COLORS[mission.difficulty] || 'text-gray-400 border-gray-600')}>
+            <span className={cn('text-white font-semibold font-jetbrains-mono', compact ? 'text-xs' : 'text-sm')}>{mission.title}</span>
+            <Badge
+              variant={mission.difficulty === 'S' ? 'gold' : mission.difficulty === 'A' ? 'magenta' : 'cyan'}
+              size="sm"
+              glow={false}
+              className="text-[10px] px-1.5"
+            >
               {mission.difficulty}
-            </span>
+            </Badge>
             {compact && (
-              <span className="ml-auto text-xs text-cyan-400 font-mono shrink-0">+{mission.xpReward} XP</span>
+              <span className="ml-auto text-xs text-neon-cyan font-mono shrink-0">+{mission.xpReward} XP</span>
             )}
           </div>
 
@@ -93,9 +102,9 @@ export default function MissionCard({ mission, onComplete }: MissionCardProps) {
                   <span className="text-gray-400">{Math.round(progressPct)}%</span>
                 </div>
               )}
-              <div className="h-1 bg-[#1a1a2e] rounded-full overflow-hidden">
+              <div className="h-1 bg-black-bg border border-neon-cyan border-opacity-20 rounded-none overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-neon-cyan via-neon-magenta to-neon-green rounded-none transition-all duration-500 shadow-neon-cyan"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
@@ -103,18 +112,18 @@ export default function MissionCard({ mission, onComplete }: MissionCardProps) {
           )}
 
           {!compact && (
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="text-xs text-cyan-400 font-mono">+{mission.xpReward} XP</span>
-              <span className="text-xs text-yellow-400 font-mono">+{mission.goldReward}g</span>
+            <div className="flex items-center gap-2 flex-wrap mt-2">
+              <Badge variant="cyan" size="sm" glow={false}>⚡ {mission.xpReward} XP</Badge>
+              <Badge variant="gold" size="sm" glow={false}>💰 {mission.goldReward}g</Badge>
               {mission.itemReward && (
-                <span className="text-xs text-purple-400">{mission.itemReward.icon} {mission.itemReward.name}</span>
+                <Badge variant="magenta" size="sm" glow={false}>{mission.itemReward.icon} {mission.itemReward.name}</Badge>
               )}
-              <span className={cn('text-xs ml-auto', CATEGORY_COLORS[mission.category])}>
-                {mission.category === 'exercise' ? 'Exercício' :
-                 mission.category === 'study' ? 'Estudo' :
-                 mission.category === 'habit' ? 'Hábito' :
-                 mission.category === 'dungeon' ? 'Dungeon' : 'Boss'}
-              </span>
+              <Badge variant="cyan" size="sm" glow={false} className="ml-auto">
+                {mission.category === 'exercise' ? '🏃 Exercício' :
+                 mission.category === 'study' ? '📚 Estudo' :
+                 mission.category === 'habit' ? '⭐ Hábito' :
+                 mission.category === 'dungeon' ? '🏰 Dungeon' : '👹 Boss'}
+              </Badge>
             </div>
           )}
         </div>

@@ -5,6 +5,7 @@ import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import XpBar from '@/components/character/XpBar'
 import MissionCard from '@/components/missions/MissionCard'
+import { StatBox, Badge, Card, Button } from '@/components/ui'
 import { getRankColor, getRankBgColor, getClassColor, getClassIcon, formatNumber, cn, isToday } from '@/lib/utils'
 import { generateLocalProphecy } from '@/lib/prophecy'
 import { calculateSecondaryStats } from '@/lib/xp'
@@ -103,42 +104,34 @@ export default function DashboardPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { label: 'Missões Completas', value: stats.totalMissionsCompleted, icon: '✅', color: 'text-green-400' },
-            { label: 'Conquistas', value: `${unlockedAchievements}/${achievements.length}`, icon: '🏆', color: 'text-yellow-400' },
-            {
-              label: activeDungeons > 0 ? `Dungeons (${activeDungeons} ativa${activeDungeons > 1 ? 's' : ''})` : 'Dungeons',
-              value: `${stats.dungeonsCleared}`,
-              icon: '🏰',
-              color: 'text-purple-400',
-            },
-            { label: 'Bosses Derrotados', value: stats.bossesDefeated, icon: '👹', color: 'text-red-400' },
-          ].map(stat => (
-            <div key={stat.label} className="card">
-              <div className="text-2xl mb-2">{stat.icon}</div>
-              <div className={cn('text-2xl font-black', stat.color)}>{stat.value}</div>
-              <div className="text-gray-500 text-xs mt-0.5">{stat.label}</div>
-            </div>
-          ))}
+          <StatBox label="Missões Completas" value={stats.totalMissionsCompleted} icon="✅" color="green" />
+          <StatBox label="Conquistas" value={`${unlockedAchievements}/${achievements.length}`} icon="🏆" color="magenta" />
+          <StatBox
+            label={activeDungeons > 0 ? `Dungeons (${activeDungeons})` : 'Dungeons'}
+            value={stats.dungeonsCleared}
+            icon="🏰"
+            color="cyan"
+          />
+          <StatBox label="Bosses Derrotados" value={stats.bossesDefeated} icon="👹" color="magenta" animated />
         </div>
 
         {/* Secondary Stats */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
-            { label: 'HP Máximo', value: secondary.maxHp, icon: '❤️', color: 'text-red-400' },
-            { label: 'Mana Máxima', value: secondary.maxMana, icon: '💧', color: 'text-blue-400' },
-            { label: 'Ataque', value: secondary.attackPower, icon: '⚔️', color: 'text-orange-400' },
-            { label: 'Defesa', value: secondary.defense, icon: '🛡️', color: 'text-gray-300' },
-            { label: 'Velocidade', value: secondary.speed, icon: '⚡', color: 'text-yellow-400' },
-            { label: 'Bônus XP', value: `+${secondary.xpBonus.toFixed(1)}%`, icon: '📈', color: 'text-cyan-400' },
+            { label: 'HP Máximo', value: secondary.maxHp, icon: '❤️', color: 'magenta' as const },
+            { label: 'Mana Máxima', value: secondary.maxMana, icon: '💧', color: 'cyan' as const },
+            { label: 'Ataque', value: secondary.attackPower, icon: '⚔️', color: 'green' as const },
+            { label: 'Defesa', value: secondary.defense, icon: '🛡️', color: 'cyan' as const },
+            { label: 'Velocidade', value: secondary.speed, icon: '⚡', color: 'magenta' as const },
+            { label: 'Bônus XP', value: `+${secondary.xpBonus.toFixed(1)}%`, icon: '📈', color: 'green' as const },
           ].map(s => (
-            <div key={s.label} className="card flex items-center gap-3">
-              <span className="text-xl">{s.icon}</span>
+            <Card key={s.label} interactive glow={s.color} className="flex items-center gap-3 p-3">
+              <span className="text-xl text-2xl">{s.icon}</span>
               <div>
-                <div className={cn('font-bold text-sm', s.color)}>{s.value}</div>
+                <div className="font-bold text-sm text-neon-cyan">{s.value}</div>
                 <div className="text-gray-500 text-xs">{s.label}</div>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
 
