@@ -4,22 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useGameStore } from '@/store/useGameStore'
 import { cn, xpBarPercent, getRankColor } from '@/lib/utils'
-
-const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Dashboard', icon: '⚡' },
-  { href: '/character', label: 'Personagem', icon: '👤' },
-  { href: '/skills', label: 'Habilidades', icon: '✨' },
-  { href: '/gallery', label: 'Galeria IA', icon: '🖼️' },
-  { href: '/missions', label: 'Missões', icon: '📋' },
-  { href: '/dungeons', label: 'Dungeons', icon: '🏰' },
-  { href: '/inventory', label: 'Inventário', icon: '🎒' },
-  { href: '/loja', label: 'Loja', icon: '🏪' },
-  { href: '/achievements', label: 'Conquistas', icon: '🏆' },
-  { href: '/ranking', label: 'Ranking', icon: '📊' },
-  { href: '/ark', label: 'ARK IA', icon: '🤖' },
-]
-
-
+import { NAV_ITEMS } from './nav-items'
 
 export default function Sidebar() {
   const pathname = usePathname()
@@ -27,7 +12,7 @@ export default function Sidebar() {
   const xpPct = xpBarPercent(character.currentXp, character.xpToNextLevel)
 
   return (
-    <aside className="w-64 min-h-screen bg-[#0d0d1a] border-r border-[#1a1a2e] flex flex-col fixed left-0 top-0 z-40">
+    <aside className="hidden md:flex w-64 min-h-screen bg-[#0d0d1a] border-r border-[#1a1a2e] flex-col fixed left-0 top-0 z-40">
       {/* Logo */}
       <div className="p-6 border-b border-[#1a1a2e]">
         <div className="flex items-center gap-3">

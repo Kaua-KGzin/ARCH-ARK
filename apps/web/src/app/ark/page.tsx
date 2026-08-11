@@ -81,8 +81,8 @@ export default function ArkPage() {
   } = useGameStore()
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
-  const [initialized, setInitialized] = useState(false)
   const [geminiEnabled, setGeminiEnabled] = useState(false)
+  const initialized = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -93,7 +93,8 @@ export default function ArkPage() {
   }, [])
 
   useEffect(() => {
-    if (!initialized && arkMessages.length === 0) {
+    if (!initialized.current && arkMessages.length === 0) {
+      initialized.current = true
       const welcome: ArkMessage = {
         id: generateId(),
         role: 'ark',
@@ -109,10 +110,8 @@ export default function ArkPage() {
           setTimeout(() => addArkMessage(msg), i * 1000)
         })
       }, 800)
-
-      setInitialized(true)
     }
-  }, [initialized, arkMessages.length, character, missions, stats, addArkMessage])
+  }, [arkMessages.length, character, missions, stats, addArkMessage])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })

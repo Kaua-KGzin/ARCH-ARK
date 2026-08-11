@@ -1,46 +1,46 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { toast } from 'react-hot-toast'
-import { signOut, updateEmail, updatePassword, sendPasswordResetEmail } from 'firebase/auth'
+import { toast } from 'sonner'
+import { signOut } from '@/lib/auth-actions'
+import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 
+function errorMessage(err: unknown, fallback: string) {
+  return err instanceof Error ? err.message : fallback
+}
+
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, loading: authLoading } = useAuth()
+  const { user } = useAuth()
   const { character } = useGameStore()
   const [currentTab, setCurrentTab] = useState<'info' | 'security' | 'preferences'>('info')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
-  // Auth states
-  const [newEmail, setNewEmail] = useState('')
+  const [newEmail, setNewEmail] = useState(user?.email || '')
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
 
-  useEffect(() => {
-    if (!authLoading && user) {
-      setNewEmail(user.email || '')
-    }
-  }, [user, authLoading])
-
   const handleUpdateEmail = async () => {
-    if (!user || !newEmail.includes('@')) {
+    if (!newEmail.includes('@')) {
       toast.error('E-mail inválido!')
       return
     }
 
     setIsSaving(true)
     try {
-      await updateEmail(user, newEmail)
-      toast.success('E-mail atualizado com sucesso!')
+      const { error } = await createClient().auth.updateUser({ email: newEmail })
+      if (error) throw error
+      toast.success('Confirme o novo e-mail na sua caixa de entrada.')
       setIsEditing(false)
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao atualizar e-mail')
+    } catch (err) {
+      toast.error(errorMessage(err, 'Erro ao atualizar e-mail'))
     } finally {
       setIsSaving(false)
     }
@@ -58,13 +58,14 @@ export default function ProfilePage() {
 
     setIsSaving(true)
     try {
-      await updatePassword(user!, newPassword)
+      const { error } = await createClient().auth.updateUser({ password: newPassword })
+      if (error) throw error
       toast.success('Senha atualizada com sucesso!')
       setNewPassword('')
       setConfirmNewPassword('')
       setIsEditing(false)
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao atualizar senha')
+    } catch (err) {
+      toast.error(errorMessage(err, 'Erro ao atualizar senha'))
     } finally {
       setIsSaving(false)
     }
@@ -74,14 +75,13 @@ export default function ProfilePage() {
     if (!user?.email) return
     setIsSaving(true)
     try {
-      const { getFirebaseAuth } = await import('@/lib/firebase')
-      const auth = getFirebaseAuth()
-      if (auth) {
-        await sendPasswordResetEmail(auth, user.email)
-      }
+      const { error } = await createClient().auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/auth/callback?next=/profile`,
+      })
+      if (error) throw error
       toast.success('E-mail de recuperação enviado!')
-    } catch (err: any) {
-      toast.error(err.message || 'Erro ao enviar e-mail de recuperação')
+    } catch (err) {
+      toast.error(errorMessage(err, 'Erro ao enviar e-mail de recuperação'))
     } finally {
       setIsSaving(false)
     }
@@ -89,30 +89,12 @@ export default function ProfilePage() {
 
   const handleLogout = async () => {
     try {
-      const { getFirebaseAuth } = await import('@/lib/firebase')
-      const auth = getFirebaseAuth()
-      if (auth) {
-        await signOut(auth)
-      }
+      await signOut()
       toast.success('Desconectado com sucesso!')
       router.push('/auth')
-    } catch (err) {
+    } catch {
       toast.error('Erro ao desconectar')
     }
-  }
-
-  if (authLoading) {
-    return (
-      <GameLayout title="Perfil">
-        <div className="flex items-center justify-center py-20">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="w-12 h-12 border-4 border-slate-700 border-t-cyan-400 rounded-full"
-          />
-        </div>
-      </GameLayout>
-    )
   }
 
   return (
@@ -318,9 +300,13 @@ export default function ProfilePage() {
 
               {currentTab === 'preferences' && (
                 <div className="space-y-4">
-                  <div className="text-slate-400 text-sm">
-                    As preferências de som, tema e layout estão disponíveis no menu de configurações dentro do jogo.
-                  </div>
+                  <Link
+                    href="/settings"
+                    className="flex items-center justify-between rounded-lg bg-cyan-500/10 border border-cyan-500/30 px-4 py-3 text-sm text-cyan-300 hover:bg-cyan-500/20 transition-all"
+                  >
+                    <span>⚙️ Som, tema e partículas</span>
+                    <span>→</span>
+                  </Link>
                   <div className="pt-4 border-t border-slate-800">
                     <p className="text-xs font-bold text-slate-400 uppercase mb-2">Área de Perigo</p>
                     <button

@@ -1,25 +1,48 @@
 import type { Metadata, Viewport } from 'next'
+import { Toaster } from 'sonner'
 import './globals.css'
 import { AuthProvider } from '@/components/providers/AuthProvider'
+import { GameSyncProvider } from '@/components/providers/GameSyncProvider'
+import { PwaRegister } from '@/components/providers/PwaRegister'
+import { ThemeApplier } from '@/components/providers/ThemeApplier'
+import { createClient } from '@/lib/supabase/server'
+import { fetchCharacterRow, rowToGameState } from '@/lib/supabase/game-sync'
 
 export const metadata: Metadata = {
   title: 'ARCH ARK — Evolua na Vida Real',
-  description: 'O sistema de Solo Leveling para a vida real. Transforme exercícios, estudos e hábitos em XP, itens e evolução de personagem.',
-  icons: { icon: '/favicon.ico' },
+  description:
+    'O sistema de Solo Leveling para a vida real. Transforme exercícios, estudos e hábitos em XP, itens e evolução de personagem.',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: { capable: true, statusBarStyle: 'black-translucent', title: 'ARCH ARK' },
 }
 
 export const viewport: Viewport = {
   themeColor: '#050508',
   width: 'device-width',
   initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const characterRow = user ? await fetchCharacterRow(supabase, user.id) : null
+  const initialState = characterRow ? rowToGameState(characterRow) : null
+
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className="min-h-screen bg-[#050508]" suppressHydrationWarning>
-        <AuthProvider>
-          {children}
+        <AuthProvider initialUser={user}>
+          <GameSyncProvider userId={user?.id ?? null} initialState={initialState}>
+            <Toaster theme="dark" position="top-right" richColors closeButton />
+            <PwaRegister />
+            <ThemeApplier />
+            {children}
+          </GameSyncProvider>
         </AuthProvider>
       </body>
     </html>

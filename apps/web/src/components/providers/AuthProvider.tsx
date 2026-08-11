@@ -1,29 +1,29 @@
 'use client'
 
-import { ReactNode, useEffect, useState, createContext } from 'react'
-import { User } from 'firebase/auth'
-import { Toaster } from 'react-hot-toast'
-import {
-  initFirebase,
-  isFirebaseConfigured,
-  onAuthStateChanged,
-  getFirebaseAuth,
-} from '@/lib/firebase'
+import { ReactNode, createContext, useEffect, useState } from 'react'
+import type { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 
 export interface AuthContextType {
   user: User | null
-  loading: boolean
-  isConfigured: boolean
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [isInitialized, setIsInitialized] = useState(false)
+// The middleware already guarantees the correct `user` before this ever
+// renders (see src/lib/supabase/middleware.ts), so there is no loading
+// state here on purpose — no client-side spinner, no race to lose.
+export function AuthProvider({
+  initialUser,
+  children,
+}: {
+  initialUser: User | null
+  children: ReactNode
+}) {
+  const [user, setUser] = useState<User | null>(initialUser)
 
   useEffect(() => {
+<<<<<<< HEAD
     // Initialize Firebase once on mount
     if (!isInitialized) {
       console.log('[Auth] Initializing...')
@@ -125,4 +125,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   )
+=======
+    const supabase = createClient()
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  return <AuthContext.Provider value={{ user }}>{children}</AuthContext.Provider>
+>>>>>>> 9af05d9ff57d4bf4c20a33b57a2cb8231fd558f9
 }

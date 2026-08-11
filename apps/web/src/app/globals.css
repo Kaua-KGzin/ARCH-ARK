@@ -3,12 +3,31 @@
 @reference "tailwindcss";
 
 :root {
-  --neon-blue: #00d4ff;
-  --neon-purple: #8b5cf6;
-  --neon-gold: #fbbf24;
   --dark-bg: #050508;
   --dark-card: #0d0d1a;
   --dark-border: #1a1a2e;
+}
+
+/* Temas: reatribuem os tokens de cor cyan e purple do Tailwind (usados como
+   destaque em todo o app) via variável CSS — recolore a UI inteira sem
+   precisar tocar em cada componente. "monarch-dark" é o padrão (cyan e
+   purple nativos do Tailwind, sem override). */
+[data-theme='shadow-purple'] {
+  --color-cyan-300: #c4b5fd;
+  --color-cyan-400: #a78bfa;
+  --color-cyan-500: #8b5cf6;
+  --color-purple-400: #e879f9;
+  --color-purple-500: #d946ef;
+  --color-purple-600: #c026d3;
+}
+
+[data-theme='crimson-boss'] {
+  --color-cyan-300: #fca5a5;
+  --color-cyan-400: #f87171;
+  --color-cyan-500: #ef4444;
+  --color-purple-400: #fb923c;
+  --color-purple-500: #f97316;
+  --color-purple-600: #ea580c;
 }
 
 * { box-sizing: border-box; }

@@ -1,9 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
 import { signInWithEmail, registerWithEmail, signInWithGoogle } from '@/lib/auth-actions'
 
 type AuthMode = 'login' | 'register'
@@ -11,7 +10,6 @@ type ViewMode = 'landing' | 'form'
 
 export default function AuthPage() {
   const router = useRouter()
-  const { user, loading } = useAuth()
 
   const [view, setView] = useState<ViewMode>('landing')
   const [mode, setMode] = useState<AuthMode>('login')
@@ -20,24 +18,6 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-
-  // If already logged in, redirect to dashboard
-  useEffect(() => {
-    if (!loading && user) {
-      router.replace('/dashboard')
-    }
-  }, [user, loading, router])
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-cyan-950/20 to-slate-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-slate-700 border-t-cyan-400 rounded-full mx-auto animate-spin" />
-          <p className="mt-4 text-slate-400 text-sm">Verificando autenticação...</p>
-        </div>
-      </div>
-    )
-  }
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -64,7 +44,7 @@ export default function AuthPage() {
         await registerWithEmail(email, password)
       }
       router.push('/onboarding')
-    } catch (err: any) {
+    } catch (err) {
       // Error already shown via toast in auth-actions
       console.error('[Auth Error]', err)
     } finally {
@@ -78,7 +58,7 @@ export default function AuthPage() {
     try {
       await signInWithGoogle()
       router.push('/onboarding')
-    } catch (err: any) {
+    } catch (err) {
       console.error('[Google Auth Error]', err)
     } finally {
       setIsLoading(false)

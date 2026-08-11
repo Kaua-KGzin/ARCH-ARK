@@ -1,27 +1,57 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
+import { createClient } from '@/lib/supabase/client'
 import { cn, getRankColor, getClassIcon, formatNumber } from '@/lib/utils'
-import { CharacterClass, Rank } from '@/types/game'
+import type { CharacterClass, Rank } from '@/types/game'
 
-const MOCK_RANKING = [
-  { rank: 1, name: 'Sung Jin-Woo', class: 'Monarca' as CharacterClass, level: 200, xp: 9_850_000, rank_title: 'Legendary' as Rank, avatar: '👑', streak: 365 },
-  { rank: 2, name: 'Thomas Andre', class: 'Guerreiro' as CharacterClass, level: 187, xp: 8_200_000, rank_title: 'SSS' as Rank, avatar: '⚔️', streak: 200 },
-  { rank: 3, name: 'Liu Zhigang', class: 'Mago' as CharacterClass, level: 175, xp: 7_500_000, rank_title: 'SS' as Rank, avatar: '🔮', streak: 150 },
-  { rank: 4, name: 'Go Gunhee', class: 'Curandeiro' as CharacterClass, level: 160, xp: 6_800_000, rank_title: 'S' as Rank, avatar: '✨', streak: 120 },
-  { rank: 5, name: 'Cha Hae-In', class: 'Assassino' as CharacterClass, level: 145, xp: 5_900_000, rank_title: 'S' as Rank, avatar: '🗡️', streak: 98 },
-  { rank: 6, name: 'Choi Jong-In', class: 'Mago' as CharacterClass, level: 130, xp: 4_800_000, rank_title: 'A' as Rank, avatar: '🔮', streak: 75 },
-  { rank: 7, name: 'Baek Yoonho', class: 'Guerreiro' as CharacterClass, level: 110, xp: 3_900_000, rank_title: 'A' as Rank, avatar: '⚔️', streak: 60 },
-  { rank: 8, name: 'Goto Ryuji', class: 'Arqueiro' as CharacterClass, level: 95, xp: 3_100_000, rank_title: 'B' as Rank, avatar: '🏹', streak: 45 },
-  { rank: 9, name: 'Ma Dongwon', class: 'Assassino' as CharacterClass, level: 80, xp: 2_400_000, rank_title: 'B' as Rank, avatar: '🗡️', streak: 30 },
-]
+interface LeaderboardEntry {
+  characterId: string
+  name: string
+  class: CharacterClass
+  level: number
+  xp: number
+  rank_title: Rank
+  avatar: string
+  streak: number
+}
+
+const TOP3_ICONS = ['🥇', '🥈', '🥉']
 
 export default function RankingPage() {
-  const { character, stats } = useGameStore()
+  const { character } = useGameStore()
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const playerEntry = {
-    rank: MOCK_RANKING.length + 1,
+  useEffect(() => {
+    createClient()
+      .rpc('get_leaderboard', { limit_count: 50 })
+      .then(({ data, error }) => {
+        if (!error && data) {
+          setLeaderboard(
+            data.map((row) => ({
+              characterId: row.character_id,
+              name: row.name,
+              class: row.class as CharacterClass,
+              level: row.level,
+              xp: row.total_xp,
+              rank_title: row.rank as Rank,
+              avatar: row.avatar,
+              streak: row.streak,
+            }))
+          )
+        }
+        setLoading(false)
+      })
+  }, [])
+
+  const others = leaderboard.filter((e) => e.characterId !== character.id)
+  const myPosition = others.filter((e) => e.xp > character.totalXp).length + 1
+
+  const playerEntry: LeaderboardEntry = {
+    characterId: character.id,
     name: character.name,
     class: character.class,
     level: character.level,
@@ -30,8 +60,6 @@ export default function RankingPage() {
     avatar: character.avatar,
     streak: character.streak,
   }
-
-  const TOP3_ICONS = ['🥇', '🥈', '🥉']
 
   return (
     <GameLayout title="Ranking Global">
@@ -44,7 +72,7 @@ export default function RankingPage() {
             <div>
               <div className="text-xs text-gray-500 font-mono mb-1">SUA POSIÇÃO</div>
               <div className="flex items-center gap-3">
-                <span className="text-3xl font-black text-cyan-400">#{playerEntry.rank}</span>
+                <span className="text-3xl font-black text-cyan-400">#{myPosition}</span>
                 <div>
                   <div className="text-white font-bold">{character.name}</div>
                   <div className="text-xs text-gray-400">
@@ -61,100 +89,108 @@ export default function RankingPage() {
           </div>
         </div>
 
-        {/* Top 3 */}
-        <div className="grid grid-cols-3 gap-4">
-          {MOCK_RANKING.slice(0, 3).map((entry, i) => (
-            <div
-              key={entry.rank}
-              className={cn(
-                'card text-center relative overflow-hidden',
-                i === 0 && 'border-yellow-500/30 bg-yellow-900/10',
-                i === 1 && 'border-gray-400/30 bg-gray-900/20',
-                i === 2 && 'border-amber-600/30 bg-amber-900/10',
-              )}
-            >
-              <div className="text-3xl mb-1">{TOP3_ICONS[i]}</div>
-              <div className="text-2xl mb-1">{entry.avatar}</div>
-              <div className="text-white font-bold text-sm truncate">{entry.name}</div>
-              <div className={cn('text-xs font-bold', getRankColor(entry.rank_title))}>{entry.rank_title}</div>
-              <div className="text-xs text-gray-500 mt-1">{getClassIcon(entry.class)} Nv.{entry.level}</div>
-              <div className="text-cyan-400 text-xs font-mono mt-1">{formatNumber(entry.xp)} XP</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Full Ranking Table */}
-        <div className="card overflow-hidden">
-          <div className="text-sm font-mono text-gray-500 mb-4 flex gap-4">
-            <span className="w-10">POS</span>
-            <span className="flex-1">CAÇADOR</span>
-            <span className="w-20 text-right">NÍVEL</span>
-            <span className="w-24 text-right">XP</span>
-            <span className="w-16 text-right">STREAK</span>
-          </div>
-
-          <div className="space-y-2">
-            {MOCK_RANKING.map((entry, i) => (
-              <div
-                key={entry.rank}
-                className={cn(
-                  'flex items-center gap-4 p-3 rounded-lg transition-all',
-                  i < 3 ? 'bg-[#0a0a12]' : 'hover:bg-[#0a0a12]'
-                )}
-              >
-                <div className={cn(
-                  'w-10 text-center font-black text-lg flex-shrink-0',
-                  i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-amber-600' : 'text-gray-600'
-                )}>
-                  {i < 3 ? TOP3_ICONS[i] : `#${entry.rank}`}
-                </div>
-                <div className="flex-1 flex items-center gap-3 min-w-0">
-                  <span className="text-xl">{entry.avatar}</span>
-                  <div className="min-w-0">
-                    <div className="text-white font-semibold text-sm truncate">{entry.name}</div>
-                    <div className="flex items-center gap-1 text-xs">
-                      <span>{getClassIcon(entry.class)}</span>
-                      <span className="text-gray-500">{entry.class}</span>
-                      <span className="text-gray-700">·</span>
-                      <span className={getRankColor(entry.rank_title)}>{entry.rank_title}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="w-20 text-right text-white font-bold text-sm">{entry.level}</div>
-                <div className="w-24 text-right text-cyan-400 font-mono text-sm">{formatNumber(entry.xp)}</div>
-                <div className="w-16 text-right text-orange-400 text-xs">🔥 {entry.streak}d</div>
-              </div>
-            ))}
-
-            {/* Player entry */}
-            <div className="mt-2 pt-2 border-t border-[#1a1a2e]">
-              <div className="flex items-center gap-4 p-3 rounded-lg bg-blue-900/10 border border-blue-500/20">
-                <div className="w-10 text-center font-black text-blue-400 flex-shrink-0">#{playerEntry.rank}</div>
-                <div className="flex-1 flex items-center gap-3">
-                  <span className="text-xl">{playerEntry.avatar}</span>
-                  <div>
-                    <div className="text-white font-semibold text-sm">{playerEntry.name} <span className="text-xs text-blue-400">(você)</span></div>
-                    <div className="flex items-center gap-1 text-xs">
-                      <span>{getClassIcon(playerEntry.class)}</span>
-                      <span className="text-gray-500">{playerEntry.class}</span>
-                      <span className="text-gray-700">·</span>
-                      <span className={getRankColor(playerEntry.rank_title)}>{playerEntry.rank_title}</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="w-20 text-right text-white font-bold text-sm">{playerEntry.level}</div>
-                <div className="w-24 text-right text-cyan-400 font-mono text-sm">{formatNumber(playerEntry.xp)}</div>
-                <div className="w-16 text-right text-orange-400 text-xs">🔥 {playerEntry.streak}d</div>
-              </div>
+        {loading ? (
+          <div className="card text-center py-12 text-gray-500 text-sm">Carregando ranking...</div>
+        ) : others.length === 0 ? (
+          <div className="card bg-purple-900/10 border-purple-500/20 text-center py-8">
+            <div className="text-3xl mb-2">🌐</div>
+            <div className="text-white font-bold">Você é o primeiro Caçador!</div>
+            <div className="text-gray-500 text-sm mt-1">
+              Convide outros jogadores — o ranking global preenche assim que mais contas evoluírem.
             </div>
           </div>
-        </div>
+        ) : (
+          <>
+            {/* Top 3 */}
+            <div className="grid grid-cols-3 gap-4">
+              {others.slice(0, 3).map((entry, i) => (
+                <div
+                  key={entry.characterId}
+                  className={cn(
+                    'card text-center relative overflow-hidden',
+                    i === 0 && 'border-yellow-500/30 bg-yellow-900/10',
+                    i === 1 && 'border-gray-400/30 bg-gray-900/20',
+                    i === 2 && 'border-amber-600/30 bg-amber-900/10',
+                  )}
+                >
+                  <div className="text-3xl mb-1">{TOP3_ICONS[i]}</div>
+                  <div className="text-2xl mb-1">{entry.avatar}</div>
+                  <div className="text-white font-bold text-sm truncate">{entry.name}</div>
+                  <div className={cn('text-xs font-bold', getRankColor(entry.rank_title))}>{entry.rank_title}</div>
+                  <div className="text-xs text-gray-500 mt-1">{getClassIcon(entry.class)} Nv.{entry.level}</div>
+                  <div className="text-cyan-400 text-xs font-mono mt-1">{formatNumber(entry.xp)} XP</div>
+                </div>
+              ))}
+            </div>
 
-        <div className="card bg-yellow-900/10 border-yellow-500/20 text-center py-6">
-          <div className="text-3xl mb-2">🌐</div>
-          <div className="text-white font-bold">Multiplayer em Breve</div>
-          <div className="text-gray-500 text-sm mt-1">Rankings globais reais, guildas e eventos PvP chegando nas próximas atualizações!</div>
-        </div>
+            {/* Full Ranking Table */}
+            <div className="card overflow-hidden">
+              <div className="text-sm font-mono text-gray-500 mb-4 hidden sm:flex gap-4">
+                <span className="w-10">POS</span>
+                <span className="flex-1">CAÇADOR</span>
+                <span className="w-20 text-right">NÍVEL</span>
+                <span className="w-24 text-right">XP</span>
+                <span className="w-16 text-right">STREAK</span>
+              </div>
+
+              <div className="space-y-2">
+                {others.map((entry, i) => (
+                  <div
+                    key={entry.characterId}
+                    className={cn(
+                      'flex items-center gap-3 sm:gap-4 p-3 rounded-lg transition-all',
+                      i < 3 ? 'bg-[#0a0a12]' : 'hover:bg-[#0a0a12]'
+                    )}
+                  >
+                    <div className={cn(
+                      'w-8 sm:w-10 text-center font-black text-lg flex-shrink-0',
+                      i === 0 ? 'text-yellow-400' : i === 1 ? 'text-gray-300' : i === 2 ? 'text-amber-600' : 'text-gray-600'
+                    )}>
+                      {i < 3 ? TOP3_ICONS[i] : `#${i + 1}`}
+                    </div>
+                    <div className="flex-1 flex items-center gap-3 min-w-0">
+                      <span className="text-xl">{entry.avatar}</span>
+                      <div className="min-w-0">
+                        <div className="text-white font-semibold text-sm truncate">{entry.name}</div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span>{getClassIcon(entry.class)}</span>
+                          <span className="text-gray-500 hidden sm:inline">{entry.class}</span>
+                          <span className="text-gray-700 hidden sm:inline">·</span>
+                          <span className={getRankColor(entry.rank_title)}>{entry.rank_title}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="w-14 sm:w-20 text-right text-white font-bold text-sm">{entry.level}</div>
+                    <div className="w-16 sm:w-24 text-right text-cyan-400 font-mono text-sm">{formatNumber(entry.xp)}</div>
+                    <div className="hidden sm:block w-16 text-right text-orange-400 text-xs">🔥 {entry.streak}d</div>
+                  </div>
+                ))}
+
+                {/* Player entry */}
+                <div className="mt-2 pt-2 border-t border-[#1a1a2e]">
+                  <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-blue-900/10 border border-blue-500/20">
+                    <div className="w-8 sm:w-10 text-center font-black text-blue-400 flex-shrink-0">#{myPosition}</div>
+                    <div className="flex-1 flex items-center gap-3">
+                      <span className="text-xl">{playerEntry.avatar}</span>
+                      <div>
+                        <div className="text-white font-semibold text-sm">{playerEntry.name} <span className="text-xs text-blue-400">(você)</span></div>
+                        <div className="flex items-center gap-1 text-xs">
+                          <span>{getClassIcon(playerEntry.class)}</span>
+                          <span className="text-gray-500 hidden sm:inline">{playerEntry.class}</span>
+                          <span className="text-gray-700 hidden sm:inline">·</span>
+                          <span className={getRankColor(playerEntry.rank_title)}>{playerEntry.rank_title}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="w-14 sm:w-20 text-right text-white font-bold text-sm">{playerEntry.level}</div>
+                    <div className="w-16 sm:w-24 text-right text-cyan-400 font-mono text-sm">{formatNumber(playerEntry.xp)}</div>
+                    <div className="hidden sm:block w-16 text-right text-orange-400 text-xs">🔥 {playerEntry.streak}d</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </GameLayout>
   )
