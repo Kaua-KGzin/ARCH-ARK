@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;padding:0;background:#07060A;color:#EDEAF6;font-family:'JetBrains Mono',ui-monospace,monospace;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#12E8E8;text-decoration:none}
+a:hover{color:#FFC93C}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:#0B0910}
+::-webkit-scrollbar-thumb{background:#241C36;border:2px solid #0B0910}
+@keyframes ark-scan{0%{transform:translateY(-100%)}100%{transform:translateY(1400%)}}
+@keyframes ark-rise{0%{opacity:0;transform:translateY(18px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes ark-glitch{0%,92%,100%{transform:translate(0,0);opacity:1}93%{transform:translate(-4px,1px);opacity:.85}95%{transform:translate(5px,-2px)}97%{transform:translate(-2px,2px)}}
+@keyframes ark-blink{0%,49%{opacity:1}50%,100%{opacity:.15}}
+@keyframes ark-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes ark-shine{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+@keyframes ark-pop{0%{opacity:0;transform:translateY(0) scale(.8)}20%{opacity:1;transform:translateY(-8px) scale(1.1)}100%{opacity:0;transform:translateY(-62px) scale(1)}}
+@keyframes ark-flash{0%{opacity:0}12%{opacity:.9}100%{opacity:0}}
+@keyframes ark-spin{100%{transform:rotate(360deg)}}
+@keyframes ark-ring{0%{transform:scale(.85);opacity:.55}100%{transform:scale(1.35);opacity:0}}
+@keyframes ark-orbit{0%{transform:rotate(0deg)}100%{transform:rotate(-360deg)}}
+@keyframes ark-stamp{0%{transform:scale(1.6) rotate(-8deg);opacity:0}40%{transform:scale(.94) rotate(-8deg);opacity:1}100%{transform:scale(1) rotate(-8deg);opacity:1}}
+@keyframes ark-sweep{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes ark-marq{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+</style>
+</helmet>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="ic-head" viewBox="0 0 32 32"><path d="M6 20V13a10 10 0 0 1 20 0v7l-4 6H10z" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M6 15h20M16 15v11" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M10 26v4M22 26v4" fill="none" stroke="currentColor" stroke-width="2"></path></symbol>
+<symbol id="ic-chest" viewBox="0 0 32 32"><path d="M8 5l8 4 8-4 3 6-2 4 2 12H7L9 15 7 11z" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M16 9v18M11 16h10" fill="none" stroke="currentColor" stroke-width="2"></path></symbol>
+<symbol id="ic-gloves" viewBox="0 0 32 32"><path d="M9 14V7h4v6h2V5h4v8h2V8h4v13l-5 8H12l-5-7z" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M10 20h13" fill="none" stroke="currentColor" stroke-width="2"></path></symbol>
+<symbol id="ic-legs" viewBox="0 0 32 32"><path d="M7 3h18l-2 12-2 14h-5l-1-12-1 12H9L7 15z" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M8 12h16" fill="none" stroke="currentColor" stroke-width="2"></path></symbol>
+<symbol id="ic-boots" viewBox="0 0 32 32"><path d="M9 3h8v13l9 6v5H9z" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M9 21h13M9 12h8" fill="none" stroke="currentColor" stroke-width="2"></path></symbol>
+<symbol id="ic-artifact" viewBox="0 0 32 32"><path d="M16 2l12 8-5 20H9L4 10z" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M16 10l6 5-3 10h-6l-3-10z" fill="none" stroke="currentColor" stroke-width="2"></path><path d="M4 10h24" fill="none" stroke="currentColor" stroke-width="2"></path></symbol>
+</defs></svg>
+<div style="--acc:{{ acc }};min-height:100vh;background:#07060A;background-image:linear-gradient(rgba(123,60,255,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(123,60,255,.045) 1px,transparent 1px);background-size:44px 44px;display:grid;grid-template-columns:268px 1fr;position:relative;overflow:hidden">
+
+<div style="position:absolute;inset:0;pointer-events:none;z-index:60;opacity:{{ scanOpacity }}">
+<div style="position:absolute;left:0;right:0;top:0;height:72px;background:linear-gradient(180deg,transparent,rgba(18,232,232,.07),transparent);animation:ark-scan 7s linear infinite"></div>
+<div style="position:absolute;inset:0;background:repeating-linear-gradient(180deg,rgba(0,0,0,.28) 0px,rgba(0,0,0,.28) 1px,transparent 1px,transparent 3px);opacity:.5"></div>
+</div>
+
+<aside style="border-right:2px solid #1C1730;background:#0A0810;display:flex;flex-direction:column;position:relative;z-index:20">
+  <div style="padding:22px 20px;border-bottom:2px solid #1C1730;display:flex;align-items:center;gap:12px">
+    <div style="width:44px;height:44px;background:var(--acc,#12E8E8);color:#07060A;display:grid;place-items:center;font-family:'Archivo Black',sans-serif;font-size:22px;box-shadow:6px 6px 0 #1C1730;animation:ark-glitch 6s steps(1) infinite">A</div>
+    <div>
+      <div style="font-family:'Archivo Black',sans-serif;font-size:19px;letter-spacing:-.5px;line-height:1">ARCH ARK</div>
+      <div style="font-size:10px;letter-spacing:.28em;color:var(--acc,#12E8E8);margin-top:5px;display:flex;align-items:center;gap:6px">
+        <span style="width:6px;height:6px;background:var(--acc,#12E8E8);animation:ark-blink 1.4s steps(1) infinite;display:inline-block"></span>SISTEMA ATIVO
+      </div>
+    </div>
+  </div>
+
+  <div style="padding:18px 20px;border-bottom:2px solid #1C1730">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+      <div style="width:48px;height:48px;border:2px solid #2A2142;background:#120E1D;display:grid;place-items:center;font-family:'Archivo Black',sans-serif;font-size:20px;color:var(--acc,#12E8E8)">K</div>
+      <div style="min-width:0">
+        <div style="font-weight:800;font-size:14px;letter-spacing:.04em">KAUÃ</div>
+        <div style="font-size:11px;color:#8A82A6;margin-top:3px">MONARCA · NV <span style="color:#EDEAF6;font-weight:800">{{ level }}</span></div>
+      </div>
+      <div style="margin-left:auto;background:#FFC93C;color:#07060A;font-family:'Archivo Black',sans-serif;font-size:15px;width:30px;height:30px;display:grid;place-items:center">S</div>
+    </div>
+    <div style="height:12px;background:#150F22;border:1px solid #2A2142;position:relative;overflow:hidden">
+      <div style="height:100%;background:var(--acc,#12E8E8);width:{{ xpPct }}%;transition:width .6s cubic-bezier(.2,.9,.2,1)"></div>
+      <div style="position:absolute;inset:0;width:40%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);animation:ark-shine 2.6s linear infinite"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:6px;color:#6E6690">
+      <span>{{ xpLabel }}</span><span style="color:var(--acc,#12E8E8)">{{ xpPct }}%</span>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;border-bottom:2px solid #1C1730">
+    <div style="padding:12px 8px;text-align:center;border-right:1px solid #1C1730"><div style="font-family:'Archivo Black',sans-serif;font-size:16px;color:#FFC93C">{{ gold }}</div><div style="font-size:9px;color:#6E6690;letter-spacing:.16em;margin-top:3px">OURO</div></div>
+    <div style="padding:12px 8px;text-align:center;border-right:1px solid #1C1730"><div style="font-family:'Archivo Black',sans-serif;font-size:16px;color:#FF6B2C">{{ streak }}</div><div style="font-size:9px;color:#6E6690;letter-spacing:.16em;margin-top:3px">STREAK</div></div>
+    <div style="padding:12px 8px;text-align:center"><div style="font-family:'Archivo Black',sans-serif;font-size:16px;color:#7B3CFF">SSS</div><div style="font-size:9px;color:#6E6690;letter-spacing:.16em;margin-top:3px">RANK</div></div>
+  </div>
+
+  <nav style="flex:1;padding:12px;display:flex;flex-direction:column;gap:2px;overflow-y:auto">
+    <sc-for list="{{ nav }}" as="n" hint-placeholder-count="8">
+      <div onClick="{{ n.go }}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;border-left:3px solid {{ n.bar }};background:{{ n.bg }};color:{{ n.fg }};transition:background .15s,color .15s" style-hover="background:#150F22;color:#EDEAF6">
+        <span style="font-size:10px;color:#4E4670;font-weight:400">{{ n.num }}</span>
+        <span>{{ n.label }}</span>
+        <span style="margin-left:auto;font-size:10px;color:var(--acc,#12E8E8)">{{ n.mark }}</span>
+      </div>
+    </sc-for>
+  </nav>
+
+  <div style="padding:14px 20px;border-top:2px solid #1C1730;font-size:9px;color:#4E4670;letter-spacing:.2em">V1.0.0 · SOLO SYSTEM</div>
+</aside>
+
+<main style="position:relative;overflow-y:auto;max-height:100vh">
+  <div style="position:absolute;inset:0;background:#12E8E8;pointer-events:none;z-index:50;opacity:0;animation:{{ flashAnim }}"></div>
+
+  <header style="position:sticky;top:0;z-index:30;background:rgba(7,6,10,.92);backdrop-filter:blur(6px);border-bottom:2px solid #1C1730;padding:18px 34px;display:flex;align-items:center;gap:20px">
+    <div>
+      <div style="font-size:10px;letter-spacing:.3em;color:#6E6690">{{ screenKicker }}</div>
+      <h1 style="font-family:'Archivo Black',sans-serif;font-size:26px;margin:6px 0 0;letter-spacing:-.6px">{{ screenTitle }}</h1>
+    </div>
+    <div style="margin-left:auto;display:flex;gap:10px;align-items:center">
+      <div style="border:2px solid #2A2142;padding:9px 14px;font-size:11px;letter-spacing:.14em;color:#8A82A6">{{ clock }}</div>
+      <div style="background:var(--acc,#12E8E8);color:#07060A;padding:11px 18px;font-size:11px;font-weight:800;letter-spacing:.14em;box-shadow:5px 5px 0 #1C1730;cursor:pointer;transition:transform .1s,box-shadow .1s" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #1C1730">ABRIR PORTAL</div>
+    </div>
+  </header>
+
+  <div style="overflow:hidden;border-bottom:2px solid #1C1730;background:#0A0810">
+    <div style="display:flex;white-space:nowrap;animation:ark-marq 26s linear infinite;font-size:10px;letter-spacing:.32em;color:#4E4670;padding:9px 0">
+      <span style="padding-right:40px">◤ SISTEMA ARK ONLINE ◢ &nbsp;·&nbsp; PORTAL CLASSE-S DETECTADO &nbsp;·&nbsp; SEQUÊNCIA DE {{ streak }} DIAS ATIVA &nbsp;·&nbsp; PROTOCOLO DE EVOLUÇÃO EM CURSO &nbsp;·&nbsp;</span>
+      <span style="padding-right:40px">◤ SISTEMA ARK ONLINE ◢ &nbsp;·&nbsp; PORTAL CLASSE-S DETECTADO &nbsp;·&nbsp; SEQUÊNCIA DE {{ streak }} DIAS ATIVA &nbsp;·&nbsp; PROTOCOLO DE EVOLUÇÃO EM CURSO &nbsp;·&nbsp;</span>
+    </div>
+  </div>
+
+  <sc-if value="{{ isDash }}" hint-placeholder-val="{{ true }}">
+  <div style="padding:34px;display:flex;flex-direction:column;gap:26px;max-width:1180px">
+
+    <section style="border:2px solid #2A2142;background:#0C0A14;position:relative;overflow:hidden;animation:ark-rise .5s ease-out both">
+      <div style="position:absolute;top:-60px;right:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(123,60,255,.28),transparent 70%);pointer-events:none"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:26px;padding:28px 30px;align-items:flex-start;position:relative">
+        <div style="width:104px;height:104px;border:3px solid var(--acc,#12E8E8);background:#120E1D;display:grid;place-items:center;font-family:'Archivo Black',sans-serif;font-size:44px;color:var(--acc,#12E8E8);box-shadow:9px 9px 0 #1C1730;animation:ark-float 5s ease-in-out infinite">K</div>
+        <div style="flex:1;min-width:240px">
+          <div style="font-size:10px;letter-spacing:.3em;color:#8A82A6">O QUE DESPERTOU SOZINHO</div>
+          <div style="font-family:'Archivo Black',sans-serif;font-size:58px;line-height:.92;margin:10px 0 0;letter-spacing:-2px">KAUÃ</div>
+          <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+            <span style="border:2px solid #7B3CFF;color:#B58CFF;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:.1em">MONARCA</span>
+            <span style="border:2px solid #FFC93C;color:#FFC93C;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:.1em">RANK S</span>
+            <span style="border:2px solid #2A2142;color:#8A82A6;padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:.1em">NÍVEL {{ level }}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:0;border:2px solid #1C1730">
+          <div style="padding:16px 22px;border-right:2px solid #1C1730;text-align:right"><div style="font-size:9px;letter-spacing:.2em;color:#6E6690">XP TOTAL</div><div style="font-family:'Archivo Black',sans-serif;font-size:26px;color:var(--acc,#12E8E8);margin-top:5px">{{ totalXp }}</div></div>
+          <div style="padding:16px 22px;border-right:2px solid #1C1730;text-align:right"><div style="font-size:9px;letter-spacing:.2em;color:#6E6690">SEQUÊNCIA</div><div style="font-family:'Archivo Black',sans-serif;font-size:26px;color:#FF6B2C;margin-top:5px">{{ streak }}d</div></div>
+          <div style="padding:16px 22px;text-align:right"><div style="font-size:9px;letter-spacing:.2em;color:#6E6690">OURO</div><div style="font-family:'Archivo Black',sans-serif;font-size:26px;color:#FFC93C;margin-top:5px">{{ gold }}</div></div>
+        </div>
+      </div>
+      <div style="padding:0 30px 26px;position:relative">
+        <div style="display:flex;justify-content:space-between;font-size:10px;letter-spacing:.2em;color:#6E6690;margin-bottom:8px"><span>PROGRESSO PARA NV {{ nextLevel }}</span><span style="color:var(--acc,#12E8E8)">{{ xpLabel }}</span></div>
+        <div style="height:26px;background:#150F22;border:2px solid #2A2142;position:relative;overflow:hidden">
+          <div style="height:100%;background:repeating-linear-gradient(135deg,var(--acc,#12E8E8) 0 10px,#0AA6C4 10px 20px);width:{{ xpPct }}%;transition:width .6s cubic-bezier(.2,.9,.2,1)"></div>
+          <div style="position:absolute;inset:0;width:30%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);animation:ark-shine 3s linear infinite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:2px solid #2A2142;animation:ark-rise .6s .05s ease-out both">
+      <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="4">
+        <div style="padding:22px;border-right:2px solid #1C1730;background:#0C0A14;transition:background .2s" style-hover="background:#130F1E">
+          <div style="font-size:9px;letter-spacing:.2em;color:#6E6690">{{ t.label }}</div>
+          <div style="font-family:'Archivo Black',sans-serif;font-size:38px;margin-top:10px;color:{{ t.color }};line-height:1">{{ t.value }}</div>
+          <div style="font-size:10px;color:#4E4670;margin-top:6px">{{ t.sub }}</div>
+        </div>
+      </sc-for>
+    </section>
+
+    <div style="display:grid;grid-template-columns:1.35fr 1fr;gap:26px;align-items:start">
+      <section style="animation:ark-rise .6s .1s ease-out both">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+          <h2 style="font-family:'Archivo Black',sans-serif;font-size:16px;margin:0;letter-spacing:.04em">MISSÕES DIÁRIAS</h2>
+          <span style="background:var(--acc,#12E8E8);color:#07060A;font-size:10px;font-weight:800;padding:3px 8px">{{ dailyLabel }}</span>
+          <div style="flex:1;height:2px;background:#1C1730"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ daily }}" as="m" hint-placeholder-count="4">
+            <div onClick="{{ m.go }}" style="border:2px solid {{ m.border }};background:#0C0A14;padding:{{ m.pad }};cursor:pointer;position:relative;overflow:hidden;opacity:{{ m.opacity }};transition:transform .12s,box-shadow .12s,border-color .2s" style-hover="transform:translate(-3px,-3px);box-shadow:6px 6px 0 #1C1730">
+              <div style="display:flex;align-items:center;gap:14px">
+                <div style="width:34px;height:34px;display:grid;place-items:center;border:2px solid {{ m.border }};font-family:'Archivo Black',sans-serif;font-size:13px;color:{{ m.border }};flex:none">{{ m.diff }}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:800;letter-spacing:.02em;text-decoration:{{ m.strike }}">{{ m.title }}</div>
+                  <div style="font-size:10px;color:#6E6690;margin-top:4px">{{ m.desc }}</div>
+                </div>
+                <div style="text-align:right;flex:none">
+                  <div style="font-size:13px;font-weight:800;color:var(--acc,#12E8E8)">+{{ m.xp }} XP</div>
+                  <div style="font-size:10px;color:#FFC93C;margin-top:3px">+{{ m.gold }}g</div>
+                </div>
+                <div style="width:26px;height:26px;border:2px solid {{ m.border }};display:grid;place-items:center;font-size:13px;color:{{ m.border }};flex:none">{{ m.check }}</div>
+              </div>
+              <div style="height:4px;background:#150F22;margin-top:12px"><div style="height:100%;background:{{ m.border }};width:{{ m.pct }}%;transition:width .5s ease-out"></div></div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <div style="display:flex;flex-direction:column;gap:22px;animation:ark-rise .6s .15s ease-out both">
+        <section style="border:2px solid #7B3CFF;background:linear-gradient(160deg,#150C28,#0C0A14);padding:24px;position:relative;overflow:hidden">
+          <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border:2px solid rgba(123,60,255,.35);border-radius:50%;animation:ark-spin 22s linear infinite"></div>
+          <div style="font-size:10px;letter-spacing:.3em;color:#B58CFF">PROFECIA DO DIA · ARK</div>
+          <p style="font-size:15px;line-height:1.6;margin:14px 0 0;color:#E6DEFF;text-wrap:pretty">Quem repete no escuro não precisa de plateia. Hoje o Sistema mede constância, não intensidade — feche as três diárias antes das 22h e o portal de rank A se abre.</p>
+          <div style="margin-top:18px;font-size:10px;letter-spacing:.2em;color:#7B6FA0">GERADO ÀS 06:00</div>
+        </section>
+
+        <section style="border:2px solid #2A2142;background:#0C0A14;padding:24px">
+          <div style="display:flex;align-items:center;gap:14px">
+            <div style="font-family:'Archivo Black',sans-serif;font-size:52px;color:#FF6B2C;line-height:1;animation:ark-float 4s ease-in-out infinite">{{ streak }}</div>
+            <div><div style="font-size:10px;letter-spacing:.2em;color:#6E6690">DIAS CONSECUTIVOS</div><div style="font-size:11px;color:#8A82A6;margin-top:6px">recorde: 63d</div></div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:18px">
+            <sc-for list="{{ streakTiers }}" as="s" hint-placeholder-count="4">
+              <div style="border:2px solid {{ s.border }};padding:9px 4px;text-align:center;opacity:{{ s.opacity }}">
+                <div style="font-size:12px;font-weight:800;color:{{ s.border }}">{{ s.days }}d</div>
+                <div style="font-size:9px;color:#6E6690;margin-top:3px">{{ s.bonus }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isMissions }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:34px;max-width:1180px;display:flex;flex-direction:column;gap:26px">
+    <section style="border:2px solid #2A2142;background:#0C0A14;padding:26px 30px;animation:ark-rise .5s ease-out both">
+      <div style="font-size:10px;letter-spacing:.3em;color:#6E6690">PORTAL ABERTO · CLASSE A</div>
+      <div style="font-family:'Archivo Black',sans-serif;font-size:46px;line-height:1;margin-top:12px;letter-spacing:-1.4px">MASMORRA DO<br>DISCIPLINADOR</div>
+      <p style="font-size:13px;color:#8A82A6;max-width:560px;margin:16px 0 0;line-height:1.6">Três objetivos encadeados. Falhar em um reseta o portal — o Sistema não negocia prazos.</p>
+      <div style="display:flex;gap:0;border:2px solid #1C1730;margin-top:22px;width:fit-content">
+        <div style="padding:14px 22px;border-right:2px solid #1C1730"><div style="font-size:9px;color:#6E6690;letter-spacing:.2em">RECOMPENSA</div><div style="font-family:'Archivo Black',sans-serif;font-size:22px;color:var(--acc,#12E8E8);margin-top:5px">1 200 XP</div></div>
+        <div style="padding:14px 22px;border-right:2px solid #1C1730"><div style="font-size:9px;color:#6E6690;letter-spacing:.2em">BOSS</div><div style="font-family:'Archivo Black',sans-serif;font-size:22px;color:#FF3B5C;margin-top:5px">IGRIS</div></div>
+        <div style="padding:14px 22px"><div style="font-size:9px;color:#6E6690;letter-spacing:.2em">EXPIRA</div><div style="font-family:'Archivo Black',sans-serif;font-size:22px;color:#FFC93C;margin-top:5px">04:12:38</div></div>
+      </div>
+    </section>
+    <section style="display:flex;flex-direction:column;gap:10px;animation:ark-rise .6s .08s ease-out both">
+      <sc-for list="{{ allMissions }}" as="m" hint-placeholder-count="8">
+        <div onClick="{{ m.go }}" style="border:2px solid {{ m.border }};background:#0C0A14;padding:16px 18px;cursor:pointer;display:flex;align-items:center;gap:16px;opacity:{{ m.opacity }};transition:transform .12s,box-shadow .12s" style-hover="transform:translate(-3px,-3px);box-shadow:6px 6px 0 #1C1730">
+          <div style="width:34px;height:34px;display:grid;place-items:center;border:2px solid {{ m.border }};font-family:'Archivo Black',sans-serif;font-size:13px;color:{{ m.border }};flex:none">{{ m.diff }}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:800;text-decoration:{{ m.strike }}">{{ m.title }}</div>
+            <div style="font-size:10px;color:#6E6690;margin-top:4px">{{ m.desc }} · {{ m.tag }}</div>
+          </div>
+          <div style="font-size:12px;font-weight:800;color:var(--acc,#12E8E8);flex:none">+{{ m.xp }} XP</div>
+          <div style="width:26px;height:26px;border:2px solid {{ m.border }};display:grid;place-items:center;font-size:13px;color:{{ m.border }};flex:none">{{ m.check }}</div>
+        </div>
+      </sc-for>
+    </section>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isRanking }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:34px;max-width:1000px;display:flex;flex-direction:column;gap:0;animation:ark-rise .5s ease-out both">
+    <div style="display:grid;grid-template-columns:70px 1fr 120px 110px 90px;border:2px solid #2A2142;background:#0A0810;font-size:9px;letter-spacing:.2em;color:#6E6690">
+      <div style="padding:12px 14px;border-right:1px solid #1C1730">#</div>
+      <div style="padding:12px 14px;border-right:1px solid #1C1730">CAÇADOR</div>
+      <div style="padding:12px 14px;border-right:1px solid #1C1730">CLASSE</div>
+      <div style="padding:12px 14px;border-right:1px solid #1C1730">XP</div>
+      <div style="padding:12px 14px">RANK</div>
+    </div>
+    <sc-for list="{{ ranking }}" as="r" hint-placeholder-count="6">
+      <div style="display:grid;grid-template-columns:70px 1fr 120px 110px 90px;border:2px solid #2A2142;border-top:none;background:{{ r.bg }};align-items:center;transition:background .18s" style-hover="background:#150F22">
+        <div style="padding:16px 14px;font-family:'Archivo Black',sans-serif;font-size:20px;color:{{ r.color }};border-right:1px solid #1C1730">{{ r.pos }}</div>
+        <div style="padding:16px 14px;font-size:14px;font-weight:800;border-right:1px solid #1C1730">{{ r.name }}</div>
+        <div style="padding:16px 14px;font-size:11px;color:#8A82A6;border-right:1px solid #1C1730">{{ r.cls }}</div>
+        <div style="padding:16px 14px;font-size:12px;color:var(--acc,#12E8E8);border-right:1px solid #1C1730">{{ r.xp }}</div>
+        <div style="padding:16px 14px;font-family:'Archivo Black',sans-serif;font-size:16px;color:{{ r.color }}">{{ r.rank }}</div>
+      </div>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isChar }}" hint-placeholder-val="{{ false }}">
+  <div style="padding:34px;max-width:1220px;display:flex;flex-direction:column;gap:24px">
+
+    <div style="display:grid;grid-template-columns:400px 1fr;gap:24px;align-items:start">
+
+      <section style="border:2px solid #2A2142;background:linear-gradient(170deg,#120E1D,#0A0810);position:relative;overflow:hidden;animation:ark-rise .5s ease-out both">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:{{ clsColor }}"></div>
+        <div style="height:330px;position:relative;display:grid;place-items:center;overflow:hidden">
+          <div style="position:absolute;width:250px;height:250px;border:2px solid {{ clsColor }};border-radius:50%;opacity:.25;animation:ark-ring 3.6s ease-out infinite"></div>
+          <div style="position:absolute;width:250px;height:250px;border:2px dashed {{ clsColor }};border-radius:50%;opacity:.35;animation:ark-orbit 26s linear infinite"></div>
+          <div style="position:absolute;width:320px;height:320px;border:1px solid rgba(123,60,255,.25);animation:ark-spin 40s linear infinite"></div>
+          <div style="position:absolute;bottom:0;left:0;right:0;height:90px;background:linear-gradient(180deg,transparent,#0A0810)"></div>
+          <div style="width:150px;height:150px;border:3px solid {{ clsColor }};background:#0C0A14;display:grid;place-items:center;font-family:'Archivo Black',sans-serif;font-size:76px;color:{{ clsColor }};box-shadow:12px 12px 0 rgba(0,0,0,.55);animation:ark-float 5s ease-in-out infinite;position:relative;z-index:2">{{ clsGlyph }}</div>
+          <div style="position:absolute;top:18px;right:18px;border:2px solid #FFC93C;color:#FFC93C;font-family:'Archivo Black',sans-serif;font-size:20px;padding:6px 12px;animation:ark-stamp .5s ease-out both">RANK S</div>
+        </div>
+        <div style="padding:22px 24px;border-top:2px solid #1C1730">
+          <div style="font-size:10px;letter-spacing:.3em;color:#6E6690">CAÇADOR REGISTRADO</div>
+          <div style="font-family:'Archivo Black',sans-serif;font-size:44px;line-height:1;margin-top:8px;letter-spacing:-1.4px">{{ hunterName }}</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+            <span style="border:2px solid {{ clsColor }};color:{{ clsColor }};padding:5px 12px;font-size:11px;font-weight:800;letter-spacing:.1em">{{ clsName }}</span>
+            <span style="font-size:11px;color:#6E6690">{{ clsLine }}</span>
+          </div>
+        </div>
+        <div style="border-top:2px solid #1C1730;padding:20px 24px;display:flex;align-items:center;gap:16px">
+          <div>
+            <div style="font-size:9px;letter-spacing:.24em;color:#6E6690">PODER DE COMBATE</div>
+            <div style="font-family:'Archivo Black',sans-serif;font-size:40px;color:{{ clsColor }};line-height:1;margin-top:6px;transition:color .3s">{{ power }}</div>
+          </div>
+          <div style="margin-left:auto;text-align:right">
+            <div style="font-size:9px;letter-spacing:.24em;color:#6E6690">ATRIBUTOS</div>
+            <div style="font-family:'Archivo Black',sans-serif;font-size:26px;margin-top:6px">{{ totalAttr }}</div>
+          </div>
+        </div>
+      </section>
+
+      <div style="display:flex;flex-direction:column;gap:24px">
+
+        <section style="animation:ark-rise .55s .05s ease-out both">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <h2 style="font-family:'Archivo Black',sans-serif;font-size:15px;margin:0;letter-spacing:.04em">01 · ESCOLHA A CLASSE</h2>
+            <div style="flex:1;height:2px;background:#1C1730"></div>
+            <span style="font-size:10px;color:#6E6690;letter-spacing:.16em">TROCAR REDISTRIBUI OS PONTOS</span>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+            <sc-for list="{{ classList }}" as="c" hint-placeholder-count="6">
+              <div onClick="{{ c.go }}" style="border:2px solid {{ c.border }};background:{{ c.bg }};box-shadow:{{ c.shadow }};padding:16px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:transform .12s,box-shadow .12s,border-color .2s" style-hover="transform:translate(-3px,-3px);box-shadow:6px 6px 0 #1C1730">
+                <div style="width:40px;height:40px;border:2px solid {{ c.border }};display:grid;place-items:center;font-family:'Archivo Black',sans-serif;font-size:19px;color:{{ c.color }};flex:none">{{ c.glyph }}</div>
+                <div style="min-width:0">
+                  <div style="font-size:12px;font-weight:800;letter-spacing:.04em;color:{{ c.color }}">{{ c.id }}</div>
+                  <div style="font-size:10px;color:#6E6690;margin-top:4px">{{ c.line }}</div>
+                </div>
+                <div style="margin-left:auto;font-size:10px;color:{{ c.color }}">{{ c.mark }}</div>
+              </div>
+            </sc-for>
+          </div>
+        </section>
+
+        <section style="animation:ark-rise .55s .1s ease-out both">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+            <h2 style="font-family:'Archivo Black',sans-serif;font-size:15px;margin:0;letter-spacing:.04em">02 · DISTRIBUA ATRIBUTOS</h2>
+            <div style="flex:1;height:2px;background:#1C1730"></div>
+            <span style="border:2px solid {{ pointsColor }};color:{{ pointsColor }};font-size:11px;font-weight:800;padding:4px 10px;letter-spacing:.1em">{{ points }} PONTOS</span>
+            <span onClick="{{ resetBuild }}" style="font-size:10px;color:#6E6690;letter-spacing:.14em;cursor:pointer;border-bottom:1px solid #2A2142" style-hover="color:#EDEAF6">RESETAR</span>
+          </div>
+          <div style="border:2px solid #2A2142;background:#0C0A14">
+            <sc-for list="{{ attrList }}" as="a" hint-placeholder-count="7">
+              <div style="display:flex;align-items:center;gap:16px;padding:12px 18px;border-bottom:1px solid #1C1730">
+                <div style="width:44px;font-family:'Archivo Black',sans-serif;font-size:13px;color:#6E6690;flex:none">{{ a.abbr }}</div>
+                <div style="width:120px;font-size:10px;letter-spacing:.14em;color:#8A82A6;flex:none">{{ a.label }}</div>
+                <div style="flex:1;height:10px;background:#150F22;border:1px solid #2A2142;position:relative;overflow:hidden">
+                  <div style="height:100%;background:{{ a.barColor }};width:{{ a.pct }}%;transition:width .35s cubic-bezier(.2,.9,.2,1)"></div>
+                  <div style="position:absolute;inset:0;width:34%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);animation:ark-sweep 4s linear infinite"></div>
+                </div>
+                <div style="width:36px;text-align:right;font-family:'Archivo Black',sans-serif;font-size:17px;flex:none">{{ a.value }}</div>
+                <div style="width:30px;font-size:10px;color:#3BE07A;flex:none">{{ a.delta }}</div>
+                <div style="display:flex;gap:6px;flex:none">
+                  <div onClick="{{ a.dec }}" style="width:28px;height:28px;border:2px solid #2A2142;display:grid;place-items:center;font-size:15px;font-weight:800;color:{{ a.minusColor }};cursor:pointer;transition:background .15s" style-hover="background:#150F22">−</div>
+                  <div onClick="{{ a.inc }}" style="width:28px;height:28px;background:{{ a.plusBg }};display:grid;place-items:center;font-size:15px;font-weight:800;color:{{ a.plusColor }};cursor:pointer;transition:transform .1s" style-hover="transform:translateY(-2px)">+</div>
+                </div>
+              </div>
+            </sc-for>
+            <div style="display:grid;grid-template-columns:repeat(5,1fr)">
+              <sc-for list="{{ derived }}" as="d" hint-placeholder-count="5">
+                <div style="padding:14px 16px;border-right:1px solid #1C1730;background:#0A0810">
+                  <div style="font-size:9px;letter-spacing:.2em;color:#6E6690">{{ d.label }}</div>
+                  <div style="font-family:'Archivo Black',sans-serif;font-size:22px;color:{{ d.color }};margin-top:6px;transition:color .3s">{{ d.value }}</div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <section style="animation:ark-rise .55s .15s ease-out both">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+        <h2 style="font-family:'Archivo Black',sans-serif;font-size:15px;margin:0;letter-spacing:.04em">03 · EQUIPAMENTO</h2>
+        <div style="flex:1;height:2px;background:#1C1730"></div>
+        <span style="font-size:10px;color:#6E6690;letter-spacing:.16em">{{ gearCount }} SLOTS · +{{ gearPower }} PODER</span>
+        <span style="font-size:10px;color:#4E4670;letter-spacing:.16em">CLIQUE PARA TROCAR</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:10px">
+        <sc-for list="{{ slots }}" as="s" hint-placeholder-count="6">
+          <div onClick="{{ s.go }}" style="border:2px solid {{ s.color }};background:{{ s.hatch }};cursor:pointer;position:relative;overflow:hidden;transition:transform .12s,box-shadow .12s,border-color .25s" style-hover="transform:translate(-3px,-3px);box-shadow:6px 6px 0 #1C1730">
+            <div style="position:absolute;inset:0;background:{{ s.glow }};pointer-events:none"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:2px solid {{ s.color }};position:relative">
+              <span style="font-size:9px;letter-spacing:.2em;color:#6E6690">{{ s.label }}</span>
+              <span style="background:{{ s.rarityBg }};color:{{ s.rarityFg }};border:1px solid {{ s.color }};font-family:'Archivo Black',sans-serif;font-size:10px;padding:2px 6px;line-height:1">{{ s.rarityLabel }}</span>
+            </div>
+            <div style="padding:18px 12px 8px;display:grid;place-items:center;position:relative">
+              <div style="position:absolute;width:66px;height:66px;border:1px dashed {{ s.color }};opacity:.3;animation:ark-orbit 24s linear infinite"></div>
+              <svg viewBox="0 0 32 32" width="44" height="44" style="color:{{ s.color }};opacity:{{ s.iconOpacity }};animation:ark-float 6s ease-in-out infinite;position:relative"><use href="{{ s.icon }}"></use></svg>
+            </div>
+            <div style="padding:8px 12px 14px;position:relative">
+              <div style="font-size:11px;font-weight:800;color:{{ s.text }};line-height:1.35;min-height:30px">{{ s.name }}</div>
+              <div style="font-size:9px;color:{{ s.bonusColor }};letter-spacing:.06em;margin-top:4px">{{ s.bonus }}</div>
+              <div style="height:3px;background:#150F22;margin-top:10px"><div style="height:100%;background:{{ s.color }};width:{{ s.powerPct }}%;transition:width .4s ease-out"></div></div>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <div style="display:flex;align-items:center;gap:16px;border:2px solid #2A2142;background:#0A0810;padding:18px 22px">
+      <div style="font-size:11px;color:#8A82A6;letter-spacing:.1em">{{ pointsNote }}</div>
+      <div style="margin-left:auto;background:{{ clsColor }};color:#07060A;padding:13px 26px;font-size:12px;font-weight:800;letter-spacing:.16em;box-shadow:6px 6px 0 #1C1730;cursor:pointer;transition:transform .1s,box-shadow .1s" style-hover="transform:translate(3px,3px);box-shadow:2px 2px 0 #1C1730">SELAR PERSONAGEM</div>
+    </div>
+  </div>
+  </sc-if>
+
+  <div style="position:fixed;right:44px;bottom:44px;z-index:70;pointer-events:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+    <sc-for list="{{ floaters }}" as="f" hint-placeholder-count="0">
+      <div style="font-family:'Archivo Black',sans-serif;font-size:24px;color:var(--acc,#12E8E8);text-shadow:3px 3px 0 #07060A;animation:ark-pop 1.4s ease-out forwards">{{ f.text }}</div>
+    </sc-for>
+  </div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Monarca&quot;,&quot;Sombra&quot;,&quot;Sangue&quot;],&quot;default&quot;:&quot;Monarca&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;scanlines&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;},&quot;compactMissions&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const ACCENTS = { Monarca: '#12E8E8', Sombra: '#9B6BFF', Sangue: '#FF3B5C' };
+const DIFF = { E: '#6E6690', D: '#3BE07A', C: '#12E8E8', B: '#9B6BFF', A: '#FF9B2C', S: '#FFC93C' };
+
+const MISSIONS = [
+  { id: 'm1', title: 'TREINO DE FORÇA', desc: '4 séries · peito e costas', diff: 'B', xp: 320, gold: 60, tag: 'EXERCÍCIO', pct: 100, type: 'daily' },
+  { id: 'm2', title: 'ESTUDO PROFUNDO', desc: '90 min sem notificação', diff: 'A', xp: 480, gold: 90, tag: 'ESTUDO', pct: 66, type: 'daily' },
+  { id: 'm3', title: 'HIDRATAÇÃO', desc: '3L de água ao longo do dia', diff: 'E', xp: 80, gold: 15, tag: 'HÁBITO', pct: 40, type: 'daily' },
+  { id: 'm4', title: 'MEDITAÇÃO', desc: '15 min de respiração', diff: 'D', xp: 140, gold: 25, tag: 'MENTE', pct: 0, type: 'daily' },
+  { id: 'm5', title: 'CORRIDA 10KM', desc: 'abaixo de 55 minutos', diff: 'S', xp: 900, gold: 220, tag: 'SEMANAL', pct: 30, type: 'weekly' },
+  { id: 'm6', title: 'LEITURA TÉCNICA', desc: '1 capítulo por dia · 7 dias', diff: 'B', xp: 400, gold: 70, tag: 'SEMANAL', pct: 57, type: 'weekly' },
+  { id: 'm7', title: 'DERROTAR IGRIS', desc: '30 dias sem quebrar sequência', diff: 'S', xp: 1200, gold: 400, tag: 'BOSS', pct: 76, type: 'boss' },
+];
+
+const RANKING = [
+  { pos: '01', name: 'SUNG', cls: 'Monarca', xp: '184 220', rank: 'SSS' },
+  { pos: '02', name: 'KAUÃ', cls: 'Monarca', xp: '96 480', rank: 'S', me: true },
+  { pos: '03', name: 'CHA', cls: 'Guerreiro', xp: '88 140', rank: 'S' },
+  { pos: '04', name: 'BAEK', cls: 'Guerreiro', xp: '71 002', rank: 'A' },
+  { pos: '05', name: 'MIN', cls: 'Mago', xp: '64 550', rank: 'A' },
+  { pos: '06', name: 'JOO', cls: 'Assassino', xp: '52 118', rank: 'B' },
+];
+
+const CLASSES = [
+  { id: 'Guerreiro', glyph: 'W', color: '#FF3B5C', line: 'FOR +4 · RES +3', base: { forca: 14, resistencia: 12, inteligencia: 6, disciplina: 9, foco: 7, carisma: 8, vitalidade: 13 } },
+  { id: 'Mago', glyph: 'M', color: '#9B6BFF', line: 'INT +5 · FOC +3', base: { forca: 5, resistencia: 6, inteligencia: 16, disciplina: 10, foco: 13, carisma: 9, vitalidade: 7 } },
+  { id: 'Assassino', glyph: 'A', color: '#3BE07A', line: 'FOC +4 · FOR +2', base: { forca: 11, resistencia: 8, inteligencia: 9, disciplina: 8, foco: 15, carisma: 7, vitalidade: 9 } },
+  { id: 'Monarca', glyph: 'K', color: '#12E8E8', line: 'TUDO +2 · DIS +4', base: { forca: 11, resistencia: 11, inteligencia: 11, disciplina: 15, foco: 11, carisma: 12, vitalidade: 11 } },
+  { id: 'Arqueiro', glyph: 'R', color: '#FFC93C', line: 'FOC +3 · CAR +2', base: { forca: 9, resistencia: 8, inteligencia: 8, disciplina: 10, foco: 14, carisma: 11, vitalidade: 8 } },
+  { id: 'Curandeiro', glyph: 'H', color: '#38D0FF', line: 'VIT +5 · CAR +3', base: { forca: 6, resistencia: 10, inteligencia: 12, disciplina: 11, foco: 9, carisma: 14, vitalidade: 16 } },
+];
+
+const ATTR_META = [
+  { key: 'forca', label: 'FORÇA', abbr: 'FOR' },
+  { key: 'resistencia', label: 'RESISTÊNCIA', abbr: 'RES' },
+  { key: 'inteligencia', label: 'INTELIGÊNCIA', abbr: 'INT' },
+  { key: 'disciplina', label: 'DISCIPLINA', abbr: 'DIS' },
+  { key: 'foco', label: 'FOCO', abbr: 'FOC' },
+  { key: 'carisma', label: 'CARISMA', abbr: 'CAR' },
+  { key: 'vitalidade', label: 'VITALIDADE', abbr: 'VIT' },
+];
+
+const SLOTS = [
+  { key: 'head', label: 'CABEÇA', icon: '#ic-head', items: [
+    { n: 'VAZIO', r: 'E', b: '', p: 0 },
+    { n: 'ELMO DE FERRO', r: 'C', b: 'RES +4 · DEF +9', p: 22 },
+    { n: 'COROA DA SOMBRA', r: 'S', b: 'INT +9 · DIS +5', p: 61 }] },
+  { key: 'chest', label: 'PEITO', icon: '#ic-chest', items: [
+    { n: 'VAZIO', r: 'E', b: '', p: 0 },
+    { n: 'COURAÇA GASTA', r: 'D', b: 'DEF +12', p: 18 },
+    { n: 'ARMADURA DO MONARCA', r: 'S', b: 'DEF +34 · VIT +8', p: 74 }] },
+  { key: 'gloves', label: 'LUVAS', icon: '#ic-gloves', items: [
+    { n: 'VAZIO', r: 'E', b: '', p: 0 },
+    { n: 'MANOPLAS RÚNICAS', r: 'B', b: 'FOR +7 · ATQ +14', p: 44 }] },
+  { key: 'legs', label: 'PERNAS', icon: '#ic-legs', items: [
+    { n: 'VAZIO', r: 'E', b: '', p: 0 },
+    { n: 'GREVAS DE AÇO', r: 'C', b: 'DEF +11', p: 24 },
+    { n: 'PERNEIRAS ABISSAIS', r: 'A', b: 'DEF +21 · VEL +6', p: 52 }] },
+  { key: 'boots', label: 'BOTAS', icon: '#ic-boots', items: [
+    { n: 'VAZIO', r: 'E', b: '', p: 0 },
+    { n: 'BOTAS VELOZES', r: 'B', b: 'VEL +15 · FOC +3', p: 39 }] },
+  { key: 'artifact', label: 'ARTEFATO', icon: '#ic-artifact', items: [
+    { n: 'VAZIO', r: 'E', b: '', p: 0 },
+    { n: 'FRAGMENTO DE IGRIS', r: 'A', b: 'ATQ +26', p: 57 },
+    { n: 'NÚCLEO DO SISTEMA', r: 'SSS', b: 'TUDO +6 · XP +8%', p: 96 }] },
+];
+
+const RARITY = { E: '#6E6690', D: '#3BE07A', C: '#12E8E8', B: '#9B6BFF', A: '#FF9B2C', S: '#FFC93C', SSS: '#FF3B5C' };
+
+const NAV = ['DASHBOARD', 'MISSÕES', 'DUNGEONS', 'ARK IA', 'PERSONAGEM', 'HABILIDADES', 'INVENTÁRIO', 'LOJA', 'CONQUISTAS', 'RANKING', 'ESTATÍSTICAS', 'CONFIG'];
+
+class Component extends DCLogic {
+  state = {
+    screen: 'DASHBOARD',
+    done: { m1: true },
+    xp: 1840, level: 42, gold: 3260, totalXp: 96480, streak: 27,
+    floaters: [], flash: 0, clock: '',
+    cls: 'Monarca',
+    attrs: { ...CLASSES[3].base },
+    points: 12,
+    equip: { head: 2, chest: 1, gloves: 0, legs: 1, boots: 0, artifact: 2 },
+    pulse: 0,
+    hunterName: 'KAUÃ',
+  };
+
+  pickClass(c) {
+    if (c.id === this.state.cls) return;
+    this.setState({ cls: c.id, attrs: { ...c.base }, points: 12, pulse: this.state.pulse + 1 });
+  }
+
+  bumpAttr(key, dir) {
+    this.setState((s) => {
+      if (dir > 0 && s.points <= 0) return null;
+      const base = (CLASSES.find((c) => c.id === s.cls) || CLASSES[3]).base[key];
+      const next = s.attrs[key] + dir;
+      if (dir < 0 && next < base) return null;
+      return { attrs: { ...s.attrs, [key]: next }, points: s.points - dir, pulse: s.pulse + 1 };
+    });
+  }
+
+  cycleSlot(slot) {
+    this.setState((s) => ({
+      equip: { ...s.equip, [slot.key]: (s.equip[slot.key] + 1) % slot.items.length },
+      pulse: s.pulse + 1,
+    }));
+  }
+
+  resetBuild() {
+    const c = CLASSES.find((x) => x.id === this.state.cls) || CLASSES[3];
+    this.setState({ attrs: { ...c.base }, points: 12, pulse: this.state.pulse + 1 });
+  }
+
+  componentDidMount() {
+    const tick = () => {
+      const d = new Date();
+      const p = (n) => String(n).padStart(2, '0');
+      this.setState({ clock: p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()) });
+    };
+    tick();
+    this._t = setInterval(tick, 1000);
+  }
+  componentWillUnmount() { clearInterval(this._t); }
+
+  complete(m) {
+    if (this.state.done[m.id]) return;
+    const xpMax = 4000;
+    this.setState((s) => {
+      let xp = s.xp + m.xp, level = s.level, flash = s.flash;
+      if (xp >= xpMax) { xp -= xpMax; level += 1; flash = s.flash + 1; }
+      const id = Date.now() + Math.random();
+      const floaters = [...s.floaters, { key: id, text: '+' + m.xp + ' XP' }];
+      setTimeout(() => this.setState((st) => ({ floaters: st.floaters.filter((f) => f.key !== id) })), 1400);
+      return { done: { ...s.done, [m.id]: true }, xp, level, flash, gold: s.gold + m.gold, totalXp: s.totalXp + m.xp, floaters };
+    });
+  }
+
+  mapMission(m, compact) {
+    const done = !!this.state.done[m.id];
+    return {
+      ...m,
+      go: () => this.complete(m),
+      border: done ? '#2E7D52' : (DIFF[m.diff] || '#2A2142'),
+      opacity: done ? 0.45 : 1,
+      strike: done ? 'line-through' : 'none',
+      check: done ? '✕' : '',
+      pct: done ? 100 : m.pct,
+      pad: compact ? '11px 14px' : '16px 18px',
+    };
+  }
+
+  charVals(acc) {
+    const s = this.state;
+    const cur = CLASSES.find((c) => c.id === s.cls) || CLASSES[3];
+    const total = ATTR_META.reduce((a, m) => a + s.attrs[m.key], 0);
+    const equipped = SLOTS.map((sl) => {
+      const it = sl.items[s.equip[sl.key]];
+      const empty = it.n === 'VAZIO';
+      return {
+        key: sl.key, label: sl.label, name: it.n, rarity: it.r, icon: sl.icon,
+        color: empty ? '#2A2142' : RARITY[it.r],
+        text: empty ? '#4E4670' : '#EDEAF6',
+        bonus: empty ? 'slot livre' : it.b,
+        bonusColor: empty ? '#3A3355' : '#8A82A6',
+        rarityBg: empty ? 'transparent' : RARITY[it.r],
+        rarityFg: empty ? '#3A3355' : '#07060A',
+        rarityLabel: empty ? '—' : it.r,
+        iconOpacity: empty ? 0.35 : 1,
+        hatch: empty ? 'repeating-linear-gradient(45deg,#0E0B17 0 7px,#0A0810 7px 14px)' : '#0C0A14',
+        glow: empty ? 'none' : 'radial-gradient(circle at 50% 40%,' + RARITY[it.r] + '22,transparent 70%)',
+        power: it.p,
+        powerPct: Math.min(100, it.p),
+        go: () => this.cycleSlot(sl),
+      };
+    });
+    const gear = equipped.filter((e) => e.name !== 'VAZIO').length;
+    const gearPower = equipped.reduce((a, e) => a + e.power, 0);
+    return {
+      hunterName: s.hunterName,
+      clsName: cur.id, clsGlyph: cur.glyph, clsColor: cur.color, clsLine: cur.line,
+      points: s.points,
+      pointsColor: s.points > 0 ? '#FFC93C' : '#4E4670',
+      pointsNote: s.points > 0 ? 'distribua antes de selar' : 'build selada',
+      totalAttr: total,
+      resetBuild: () => this.resetBuild(),
+      pulseKey: s.pulse,
+      auraAnim: 'ark-spin 18s linear infinite',
+      classList: CLASSES.map((c) => {
+        const on = c.id === s.cls;
+        return {
+          id: c.id, glyph: c.glyph, line: c.line,
+          border: on ? c.color : '#2A2142',
+          bg: on ? 'rgba(255,255,255,.04)' : '#0C0A14',
+          color: on ? c.color : '#8A82A6',
+          shadow: on ? '6px 6px 0 #1C1730' : 'none',
+          mark: on ? '●' : '',
+          go: () => this.pickClass(c),
+        };
+      }),
+      attrList: ATTR_META.map((m) => {
+        const v = s.attrs[m.key];
+        const base = cur.base[m.key];
+        return {
+          label: m.label, abbr: m.abbr, value: v,
+          pct: Math.min(100, Math.round((v / 30) * 100)),
+          barColor: v > base ? acc : '#4E4670',
+          delta: v > base ? '+' + (v - base) : '',
+          minusColor: v > base ? '#EDEAF6' : '#3A3355',
+          plusColor: s.points > 0 ? '#07060A' : '#4E4670',
+          plusBg: s.points > 0 ? acc : '#1C1730',
+          inc: () => this.bumpAttr(m.key, 1),
+          dec: () => this.bumpAttr(m.key, -1),
+        };
+      }),
+      slots: equipped,
+      gearCount: gear + '/6',
+      gearPower: gearPower,
+      derived: [
+        { label: 'HP', value: 100 + s.attrs.vitalidade * 12 + s.attrs.resistencia * 6, color: '#FF3B5C' },
+        { label: 'MANA', value: 50 + s.attrs.inteligencia * 10 + s.attrs.foco * 5, color: '#38D0FF' },
+        { label: 'ATAQUE', value: s.attrs.forca * 4 + s.attrs.foco * 2 + gear * 9, color: '#FF9B2C' },
+        { label: 'DEFESA', value: s.attrs.resistencia * 3 + s.attrs.vitalidade * 2 + gear * 7, color: '#8A82A6' },
+        { label: 'BÔNUS XP', value: '+' + (s.attrs.disciplina * 0.8).toFixed(1) + '%', color: acc },
+      ],
+      power: total * 7 + gearPower,
+    };
+  }
+
+  renderVals() {
+    const s = this.state;
+    const xpMax = 4000;
+    const acc = ACCENTS[this.props.theme] || ACCENTS.Monarca;
+    const compact = !!this.props.compactMissions;
+    const kickers = { DASHBOARD: 'STATUS DO CAÇADOR', 'MISSÕES': 'REGISTRO DE MISSÕES', RANKING: 'LEADERBOARD GLOBAL', PERSONAGEM: 'FORJA DE PERSONAGEM' };
+    const screen = s.screen;
+    const known = ['DASHBOARD', 'MISSÕES', 'RANKING', 'PERSONAGEM'];
+    const active = known.includes(screen) ? screen : 'DASHBOARD';
+    const daily = MISSIONS.filter((m) => m.type === 'daily');
+    const doneCount = daily.filter((m) => s.done[m.id]).length;
+
+    return {
+      acc,
+      scanOpacity: this.props.scanlines === false ? 0 : 1,
+      level: s.level, nextLevel: s.level + 1, gold: s.gold.toLocaleString('pt-BR'),
+      streak: s.streak, totalXp: s.totalXp.toLocaleString('pt-BR'),
+      xpPct: Math.round((s.xp / xpMax) * 100),
+      xpLabel: s.xp.toLocaleString('pt-BR') + ' / ' + xpMax.toLocaleString('pt-BR'),
+      clock: s.clock,
+      flashAnim: s.flash ? 'ark-flash 1s ease-out ' + s.flash : 'none',
+      isDash: active === 'DASHBOARD', isMissions: active === 'MISSÕES', isRanking: active === 'RANKING', isChar: active === 'PERSONAGEM',
+      ...this.charVals(acc),
+      screenTitle: active, screenKicker: kickers[active],
+      nav: NAV.map((label, i) => {
+        const on = label === active;
+        return {
+          label, num: String(i + 1).padStart(2, '0'),
+          bar: on ? acc : 'transparent',
+          bg: on ? 'rgba(18,232,232,.07)' : 'transparent',
+          fg: on ? '#EDEAF6' : '#8A82A6',
+          mark: on ? '●' : '',
+          go: () => this.setState({ screen: label }),
+        };
+      }),
+      tiles: [
+        { label: 'MISSÕES FECHADAS', value: 318, sub: 'desde o despertar', color: '#3BE07A' },
+        { label: 'CONQUISTAS', value: '24/60', sub: '40% do arquivo', color: '#FFC93C' },
+        { label: 'MASMORRAS', value: 12, sub: '1 portal ativo agora', color: '#9B6BFF' },
+        { label: 'BOSSES', value: 4, sub: 'igris ainda de pé', color: '#FF3B5C' },
+      ],
+      daily: daily.map((m) => this.mapMission(m, compact)),
+      allMissions: MISSIONS.map((m) => this.mapMission(m, compact)),
+      dailyLabel: doneCount + '/' + daily.length,
+      streakTiers: [7, 14, 30, 100].map((d, i) => ({
+        days: d, bonus: ['+10%', '+20%', '+30%', '+50%'][i],
+        border: s.streak >= d ? '#FF6B2C' : '#2A2142',
+        opacity: s.streak >= d ? 1 : 0.45,
+      })),
+      ranking: RANKING.map((r) => ({
+        ...r,
+        bg: r.me ? 'rgba(18,232,232,.06)' : '#0C0A14',
+        color: r.pos === '01' ? '#FFC93C' : r.me ? acc : '#8A82A6',
+      })),
+      floaters: s.floaters,
+    };
+  }
+}
+</script>
+</body>
+</html>
