@@ -6,6 +6,8 @@ import { cn } from '@/lib/utils'
 import { useState } from 'react'
 import { playSoundIfEnabled } from '@/lib/sound'
 import { Badge, Card } from '@/components/ui'
+import { canCompleteMission } from '@/lib/mission-validation'
+import { toast } from 'sonner'
 
 const CATEGORY_COLORS: Record<Mission['category'], string> = {
   exercise: 'text-red-400',
@@ -37,6 +39,7 @@ interface MissionCardProps {
 
 export default function MissionCard({ mission, onComplete }: MissionCardProps) {
   const completeMission = useGameStore((state) => state.completeMission)
+  const character = useGameStore((state) => state.character)
   const soundEnabled = useGameStore((state) => state.settings.soundEnabled)
   const compact = useGameStore((state) => state.settings.compactMissions)
   const [completing, setCompleting] = useState(false)
@@ -44,25 +47,37 @@ export default function MissionCard({ mission, onComplete }: MissionCardProps) {
   const isCompleted = mission.status === 'completed'
   const progressPct = Math.min(100, (mission.progress / mission.target) * 100)
 
+  const validation = canCompleteMission(mission, character)
+
   const handleComplete = async () => {
     if (isCompleted || completing) return
+
+    // Validate before completing
+    if (!validation.allowed) {
+      toast.error(validation.reason || 'Não pode completar esta missão')
+      return
+    }
+
     setCompleting(true)
     playSoundIfEnabled(mission.itemReward ? 'loot' : 'complete', soundEnabled)
     ;(onComplete ?? completeMission)(mission.id)
     setTimeout(() => setCompleting(false), 1000)
   }
 
+  const canClick = !isCompleted && validation.allowed
+
   return (
     <Card
-      interactive={!isCompleted}
-      glow={isCompleted ? 'green' : 'cyan'}
+      interactive={canClick}
+      glow={isCompleted ? 'green' : validation.allowed ? 'cyan' : 'magenta'}
       className={cn(
         'mission-card relative overflow-hidden',
         compact && 'py-2.5 px-3',
         isCompleted && 'opacity-70 border-neon-green border-opacity-60',
+        !canClick && !isCompleted && 'opacity-50 cursor-not-allowed',
         completing && 'animate-glitch'
       )}
-      onClick={!isCompleted ? handleComplete : undefined}
+      onClick={canClick ? handleComplete : undefined}
     >
       {/* Completed checkmark */}
       {isCompleted && (
@@ -128,6 +143,22 @@ export default function MissionCard({ mission, onComplete }: MissionCardProps) {
           )}
         </div>
       </div>
+
+      {/* Validation error message */}
+      {!isCompleted && !validation.allowed && (
+        <div className="mt-2 text-xs text-neon-magenta font-mono bg-neon-magenta bg-opacity-10 border border-neon-magenta border-opacity-30 p-2 rounded-none">
+          🚫 {validation.reason}
+        </div>
+      )}
+
+      {/* Rank requirement badge */}
+      {mission.rankRequired && (
+        <div className="mt-2">
+          <Badge variant={validation.allowed ? 'cyan' : 'magenta'} size="sm" glow={false}>
+            {validation.allowed ? '✓' : '✗'} Requer: {mission.rankRequired}
+          </Badge>
+        </div>
+      )}
     </Card>
   )
 }

@@ -87,6 +87,7 @@ export interface GameState {
 
   // Actions
   setupCharacter: (name: string, cls: CharacterClass) => void
+  setCharacter: (character: Character) => void
   completeMission: (missionId: string) => void
   updateMissionProgress: (missionId: string, amount: number) => void
   addXp: (amount: number, category: Mission['category']) => void
@@ -189,6 +190,10 @@ export function createGameStore(options: GameStoreOptions = {}) {
           }))
         },
 
+
+        setCharacter: (character) => {
+          set({ character })
+        },
 
         setupCharacter: (name, cls) => {
           const classAttributes: Record<CharacterClass, Partial<Character['attributes']>> = {

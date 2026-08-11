@@ -96,7 +96,9 @@ export interface Mission {
   icon: string
   expiresAt?: string
   completedAt?: string
+  completedDates?: string[] // Track multiple completions for weekly/monthly
   difficulty: MissionDifficulty
+  rankRequired?: Rank
 }
 
 export interface Achievement {
