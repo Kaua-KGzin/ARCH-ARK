@@ -128,6 +128,6 @@ export default function MissionCard({ mission, onComplete }: MissionCardProps) {
           )}
         </div>
       </div>
-    </div>
+    </Card>
   )
 }
