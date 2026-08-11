@@ -34,6 +34,33 @@ Também entraram: página `/settings` (3 temas, som, missões compactas), `/stat
 (gráficos com recharts), efeitos sonoros sintetizados via Web Audio, transições
 entre páginas, e a **remoção da Galeria IA** (a pedido).
 
+### 2.1. Redesign Visual — Brutalista/Neon (PRÓXIMA FASE)
+
+Um redesign visual brutalista foi criado e está **pronto para implementação**
+(arquivo: `ARCH-ARK visual redesign.zip` no root do repo). Especifica:
+
+**Identidade visual:**
+- **Tipografia:** Archivo Black (headings) + JetBrains Mono (dados)
+- **Paleta:** Grid neon sobre preto puro, sombras duras, sem gradientes suaves
+- **Efeito:** Terminal/hacker, inspirado em Solo Leveling
+
+**Animações a implementar:**
+- Scanline (linhas horizontais animadas sobre telas)
+- Glitch do logo (distorção RGB nas transições)
+- Marquee do sistema (texto rolando em loop)
+- XP animado (números subindo com wobble/bounce)
+- Floaters de +XP (partículas de XP caindo da tela)
+
+**Telas afetadas (prioridade):**
+1. Dashboard — cards com grid de neon, scanline background
+2. Missões — MissionCard redesenhada, efeito glitch ao completar
+3. Ranking — tabela com tipografia mono, floaters nos updates
+4. Sidebar/nav — grid neon como accent, hover effects duros
+
+**Próximo passo:** Converter o design Canva (ARCH-ARK.dc.html) em componentes
+React. Começar por Tailwind config (cores, fontes) e componentes de menor
+complexidade (botões, cards) antes de animações.
+
 ---
 
 ## 3. Decisões de arquitetura — leia antes de mexer
@@ -210,3 +237,84 @@ recarregar a página e confirmar que o progresso persistiu.
 - Se o `npm install` der erro de módulo não encontrado no build, apague
   `node_modules` + `package-lock.json` e reinstale: o hoisting do npm workspaces
   já quebrou uma vez neste projeto
+
+---
+
+## 11. Implementando o Redesign — Roteiro
+
+Arquivo de referência: `design-review/ARCH ARK.dc.html` (exportado de Canva)
+e `design-review/github.md` (spec de telas e elementos)
+
+### 11.1. Fase 1: Infraestrutura (Tailwind + tipografia)
+
+1. **Fonts:**
+   - Instalar `next/font`: `import { Archivo_Black, JetBrains_Mono } from 'next/font/google'`
+   - Aplicar em `app/layout.tsx`
+
+2. **Tailwind config:**
+   - Atualizar `apps/web/tailwind.config.ts` com cores neon:
+     - `neon-cyan`: `#00ffff`
+     - `neon-magenta`: `#ff00ff`
+     - `neon-green`: `#00ff00`
+     - Background: `#0a0a0a` (preto puro)
+     - Border: rgba neon com `opacity: 0.3`
+
+3. **CSS global:**
+   - Background scanline: `radial-gradient(1px 1px at 2px 3px, rgba(0,255,255,0.05) ...)`
+   - Aplicar opacity reduzida por padrão (usuários podem ativar em `/settings`)
+
+### 11.2. Fase 2: Componentes (do simples ao complexo)
+
+1. **Button.tsx** — start aqui
+   - Border `1px solid neon-cyan`
+   - Glow no hover: `shadow: 0 0 10px rgba(0,255,255,0.5)`
+   - Fonte mono para labels
+
+2. **Card.tsx**
+   - Grid pattern como background (linha + coluna)
+   - Box-shadow duro (sem blur)
+
+3. **Dashboard cards** — replicar layout do design
+   - Stat boxes com XP, ouro, rank
+   - Animações de XP (implementar com Framer Motion)
+
+4. **MissionCard** — redesenho visual
+   - Glitch effect no click de completo
+   - Floaters ao remover card
+
+5. **Ranking table** — mono typography, neon grid
+
+### 11.3. Fase 3: Animações avançadas
+
+Use `framer-motion` (já instalado):
+```tsx
+// Exemplo: XP float up
+<motion.div
+  initial={{ y: 0, opacity: 1 }}
+  animate={{ y: -100, opacity: 0 }}
+  transition={{ duration: 2, ease: 'easeOut' }}
+>
+  +{xpGain} XP
+</motion.div>
+```
+
+Efeitos:
+- **Scanline**: CSS animation ou `<video>` overlay com opacity baixa
+- **Glitch**: Clip-path shifting (veja referencias glitch CSS online)
+- **Marquee**: `<motion.div>` com `while... y: [0, -100]` infinito
+
+### 11.4. Checklist antes de PR
+
+- [ ] Zero console errors/warnings
+- [ ] Responsive em mobile (scanline desativado por padrão em telas pequenas?)
+- [ ] Acessibilidade: contraste OK mesmo com neon (testar em devtools)
+- [ ] Animações respeitam `prefers-reduced-motion`
+- [ ] Performance: scanline não mata FPS em telas grandes (considerar backdrop-filter)
+
+---
+
+## 12. Arquivos de design para referência
+
+- **`design-review/ARCH ARK.dc.html`** — arquivo exportado do Canva com mockups
+- **`design-review/github.md`** — mapa de telas e componentes
+- **ZIP extraído em:** `design-review/` (fique à vontade para reler ou expandir os mockups)
