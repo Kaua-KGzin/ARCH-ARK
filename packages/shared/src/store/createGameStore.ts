@@ -19,6 +19,7 @@ import { SYSTEM_TITLES } from '../lib/titles'
 
 export const CURRENT_CONTENT_VERSION = 2
 const XP_HISTORY_LIMIT = 200
+export const MAX_EQUIPPED_SKILLS = 4
 
 function appendXpHistory(history: { date: string; amount: number }[], amount: number) {
   if (amount <= 0) return history
@@ -27,6 +28,19 @@ function appendXpHistory(history: { date: string; amount: number }[], amount: nu
 
 const initialCreatedAt = new Date().toISOString()
 const STARTER_LOADOUT = createStarterLoadout(initialCreatedAt)
+
+/** Segunda-feira da semana corrente (mesma convenção usada em mission-validation), como chave estável de comparação. */
+function getWeekKey(date: Date = new Date()): string {
+  const day = date.getDay()
+  const weekStart = new Date(date)
+  weekStart.setDate(date.getDate() - (day === 0 ? 6 : day - 1))
+  weekStart.setHours(0, 0, 0, 0)
+  return weekStart.toDateString()
+}
+
+function getMonthKey(date: Date = new Date()): string {
+  return `${date.getFullYear()}-${date.getMonth()}`
+}
 
 const DEFAULT_CHARACTER: Character = {
   id: generateId(),
@@ -78,6 +92,8 @@ export interface GameState {
   xpHistory: XpHistoryEntry[]
   isOnboarded: boolean
   lastDailyReset: string | null
+  lastWeeklyReset: string | null
+  lastMonthlyReset: string | null
   levelUpNotification: LevelUpNotification | null
   achievementNotification: Achievement | null
   rewardNotifications: RewardNotification[]
@@ -162,6 +178,8 @@ export function createGameStore(options: GameStoreOptions = {}) {
         xpHistory: [],
         isOnboarded: false,
         lastDailyReset: null,
+        lastWeeklyReset: getWeekKey(),
+        lastMonthlyReset: getMonthKey(),
         levelUpNotification: null,
         achievementNotification: null,
         rewardNotifications: [],
@@ -170,9 +188,15 @@ export function createGameStore(options: GameStoreOptions = {}) {
         contentVersion: CURRENT_CONTENT_VERSION,
 
         toggleSkillEquip: (skillId) => {
-          set(state => ({
-            skills: state.skills.map(s => s.id === skillId ? { ...s, isEquipped: !s.isEquipped } : s)
-          }))
+          set(state => {
+            const target = state.skills.find(s => s.id === skillId)
+            if (!target) return state
+            const equippedCount = state.skills.filter(s => s.isEquipped).length
+            if (!target.isEquipped && equippedCount >= MAX_EQUIPPED_SKILLS) return state
+            return {
+              skills: state.skills.map(s => s.id === skillId ? { ...s, isEquipped: !s.isEquipped } : s)
+            }
+          })
         },
 
         setActiveTitle: (titleId) => {
@@ -422,13 +446,27 @@ export function createGameStore(options: GameStoreOptions = {}) {
 
         checkDailyReset: () => {
           const state = get()
-          const today = new Date().toDateString()
-          if (state.lastDailyReset === today) return
+          const now = new Date()
+          const todayKey = now.toDateString()
+          const weekKey = getWeekKey(now)
+          const monthKey = getMonthKey(now)
 
-          const newDailies = generateDailyMissions()
-          const nonDailies = state.missions.filter(m => m.type !== 'daily')
+          const needsDaily = state.lastDailyReset !== todayKey
+          const needsWeekly = state.lastWeeklyReset !== weekKey
+          const needsMonthly = state.lastMonthlyReset !== monthKey
+          if (!needsDaily && !needsWeekly && !needsMonthly) return
 
-          set({ missions: [...newDailies, ...nonDailies], lastDailyReset: today })
+          let missions = state.missions
+          if (needsDaily) missions = [...generateDailyMissions(), ...missions.filter(m => m.type !== 'daily')]
+          if (needsWeekly) missions = [...missions.filter(m => m.type !== 'weekly'), ...generateWeeklyMissions()]
+          if (needsMonthly) missions = [...missions.filter(m => m.type !== 'monthly'), ...generateMonthlyMissions()]
+
+          set({
+            missions,
+            lastDailyReset: needsDaily ? todayKey : state.lastDailyReset,
+            lastWeeklyReset: needsWeekly ? weekKey : state.lastWeeklyReset,
+            lastMonthlyReset: needsMonthly ? monthKey : state.lastMonthlyReset,
+          })
         },
 
         ensureStarterLoadout: () => {
@@ -698,6 +736,11 @@ export function createGameStore(options: GameStoreOptions = {}) {
             prophecyDate: base.prophecyDate ?? null,
             xpHistory: base.xpHistory ?? [],
             rewardNotifications: base.rewardNotifications ?? [],
+            // Usuários migrando de antes desse campo existir: assume que a semana/mês
+            // corrente já está "atual" em vez de forçar uma renovação imediata que
+            // descartaria progresso de missões semanais/mensais em andamento.
+            lastWeeklyReset: base.lastWeeklyReset ?? getWeekKey(),
+            lastMonthlyReset: base.lastMonthlyReset ?? getMonthKey(),
             levelUpNotification:
               base.levelUpNotification && 'playerName' in base.levelUpNotification
                 ? base.levelUpNotification
@@ -720,6 +763,8 @@ export function createGameStore(options: GameStoreOptions = {}) {
           xpHistory: state.xpHistory,
           isOnboarded: state.isOnboarded,
           lastDailyReset: state.lastDailyReset,
+          lastWeeklyReset: state.lastWeeklyReset,
+          lastMonthlyReset: state.lastMonthlyReset,
           prophecy: state.prophecy,
           prophecyDate: state.prophecyDate,
           contentVersion: state.contentVersion,

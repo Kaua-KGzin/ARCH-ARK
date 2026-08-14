@@ -1,12 +1,22 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { toast } from 'sonner'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
-import { Skill } from '@arch-ark/shared'
+import { Skill, MAX_EQUIPPED_SKILLS } from '@arch-ark/shared'
 
 export default function SkillsPage() {
   const { skills, character, toggleSkillEquip } = useGameStore()
+  const equippedCount = skills.filter(s => s.isEquipped).length
+
+  const handleToggle = (skill: Skill) => {
+    if (!skill.isEquipped && equippedCount >= MAX_EQUIPPED_SKILLS) {
+      toast.error(`Você só pode equipar até ${MAX_EQUIPPED_SKILLS} habilidades. Desequipe uma antes.`)
+      return
+    }
+    toggleSkillEquip(skill.id)
+  }
 
   const categories = [
     { key: 'strength', name: 'Força & Combate', icon: '⚔️' },
@@ -41,7 +51,7 @@ export default function SkillsPage() {
               <div>
                 <span className="text-xs text-slate-400">Habilidades Ativas</span>
                 <p className="text-xl font-bold text-purple-400">
-                  {skills.filter(s => s.isEquipped).length} / 4
+                  {equippedCount} / {MAX_EQUIPPED_SKILLS}
                 </p>
               </div>
             </div>
@@ -68,7 +78,7 @@ export default function SkillsPage() {
                       key={skill.id}
                       skill={skill}
                       characterLevel={character.level}
-                      onToggle={() => toggleSkillEquip(skill.id)}
+                      onToggle={() => handleToggle(skill)}
                     />
                   ))}
                 </div>

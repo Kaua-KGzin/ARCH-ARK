@@ -1,5 +1,6 @@
 'use client'
 
+import { toast } from 'sonner'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import { SHOP_ITEMS } from '@/lib/items'
@@ -51,6 +52,14 @@ export default function LojaPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {SHOP_ITEMS.map(item => {
             const canAfford = character.gold >= item.goldValue
+            const handleBuy = () => {
+              if (!canAfford) {
+                toast.error('Ouro insuficiente para essa compra.')
+                return
+              }
+              buyItem(item.id)
+              toast.success(`${item.name} adicionado ao inventário!`)
+            }
             return (
               <div
                 key={item.id}
@@ -85,7 +94,7 @@ export default function LojaPage() {
                   </div>
                 </div>
                 <button
-                  onClick={() => buyItem(item.id)}
+                  onClick={handleBuy}
                   disabled={!canAfford}
                   className={cn(
                     'w-full py-2.5 rounded-xl font-bold text-sm transition-all',

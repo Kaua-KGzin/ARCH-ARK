@@ -3,6 +3,9 @@
 import { useState, useRef, useEffect } from 'react'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
+import { useAuth } from '@/hooks/useAuth'
+import { createClient } from '@/lib/supabase/client'
+import { fetchArkMessages, saveArkMessage } from '@/lib/supabase/ark-sync'
 import { generateArkAnalysis, generateArkResponse } from '@/lib/ark-ai'
 import { generateLocalProphecy } from '@/lib/prophecy'
 import { ArkMessage, Mission } from '@/types/game'
@@ -79,11 +82,46 @@ export default function ArkPage() {
     character, missions, stats, arkMessages,
     addArkMessage, addCustomMissions, setProphecy,
   } = useGameStore()
+  const { user } = useAuth()
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [geminiEnabled, setGeminiEnabled] = useState(false)
+  const [historyReady, setHistoryReady] = useState(false)
   const initialized = useRef(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+
+  // Histórico do chat persiste em ark_messages (Supabase) — carrega antes de
+  // decidir se mostra a mensagem de boas-vindas, pra não duplicá-la a cada login.
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadHistory() {
+      if (user) {
+        try {
+          const history = await fetchArkMessages(createClient(), user.id)
+          if (!cancelled && history.length > 0) {
+            initialized.current = true
+            useGameStore.setState({ arkMessages: history })
+          }
+        } catch (err) {
+          console.error('[Ark] Falha ao carregar histórico:', err)
+        }
+      }
+      if (!cancelled) setHistoryReady(true)
+    }
+
+    loadHistory()
+    return () => { cancelled = true }
+  }, [user])
+
+  const pushMessage = (message: ArkMessage) => {
+    addArkMessage(message)
+    if (user) {
+      saveArkMessage(createClient(), user.id, message).catch(err => {
+        console.error('[Ark] Falha ao salvar mensagem:', err)
+      })
+    }
+  }
 
   useEffect(() => {
     fetch('/api/ark')
@@ -93,6 +131,7 @@ export default function ArkPage() {
   }, [])
 
   useEffect(() => {
+    if (!historyReady) return
     if (!initialized.current && arkMessages.length === 0) {
       initialized.current = true
       const welcome: ArkMessage = {
@@ -102,16 +141,17 @@ export default function ArkPage() {
         timestamp: new Date().toISOString(),
         type: 'analysis',
       }
-      addArkMessage(welcome)
+      pushMessage(welcome)
 
       setTimeout(() => {
         const analyses = generateArkAnalysis(character, missions, stats)
         analyses.forEach((msg, i) => {
-          setTimeout(() => addArkMessage(msg), i * 1000)
+          setTimeout(() => pushMessage(msg), i * 1000)
         })
       }, 800)
     }
-  }, [arkMessages.length, character, missions, stats, addArkMessage])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [historyReady, arkMessages.length, character, missions, stats])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -127,7 +167,7 @@ export default function ArkPage() {
   }
 
   const arkReply = (content: string, type: ArkMessage['type'] = 'analysis') => {
-    addArkMessage({ id: generateId(), role: 'ark', content, timestamp: new Date().toISOString(), type })
+    pushMessage({ id: generateId(), role: 'ark', content, timestamp: new Date().toISOString(), type })
   }
 
   const sendMessage = async (text: string = input) => {
@@ -139,7 +179,7 @@ export default function ArkPage() {
       content: text.trim(),
       timestamp: new Date().toISOString(),
     }
-    addArkMessage(userMsg)
+    pushMessage(userMsg)
     setInput('')
     setIsTyping(true)
 
@@ -169,12 +209,12 @@ export default function ArkPage() {
 
     await new Promise(r => setTimeout(r, 800 + Math.random() * 800))
     const response = generateArkResponse(text, character, missions)
-    addArkMessage(response)
+    pushMessage(response)
     setIsTyping(false)
   }
 
   const handleProphecy = async () => {
-    addArkMessage({ id: generateId(), role: 'user', content: '🔮 Quero a profecia de hoje', timestamp: new Date().toISOString() })
+    pushMessage({ id: generateId(), role: 'user', content: '🔮 Quero a profecia de hoje', timestamp: new Date().toISOString() })
     setIsTyping(true)
     try {
       const data = await postArk({ mode: 'prophecy', character })
@@ -215,7 +255,7 @@ export default function ArkPage() {
 
   const handlePlan = async (category: 'exercise' | 'study') => {
     const label = category === 'exercise' ? 'treino' : 'estudo'
-    addArkMessage({ id: generateId(), role: 'user', content: `📋 Monte meu plano de ${label} da semana`, timestamp: new Date().toISOString() })
+    pushMessage({ id: generateId(), role: 'user', content: `📋 Monte meu plano de ${label} da semana`, timestamp: new Date().toISOString() })
     setIsTyping(true)
     try {
       const data = await postArk({ mode: 'plan', character, category })

@@ -8,7 +8,7 @@ import { useState } from 'react'
 import MissionCard from '@/components/missions/MissionCard'
 
 function DungeonCard({ dungeon }: { dungeon: Dungeon }) {
-  const { activateDungeon, completeDungeonMission, addXp, addGold } = useGameStore()
+  const { activateDungeon, completeDungeonMission } = useGameStore()
   const [expanded, setExpanded] = useState(false)
 
   const progress = dungeon.missions.filter(m => m.status === 'completed').length
@@ -22,12 +22,6 @@ function DungeonCard({ dungeon }: { dungeon: Dungeon }) {
     } else {
       setExpanded(!expanded)
     }
-  }
-
-  const handleComplete = () => {
-    if (dungeon.isCompleted) return
-    addXp(dungeon.xpReward, 'dungeon')
-    addGold(dungeon.goldReward)
   }
 
   return (
@@ -97,12 +91,6 @@ function DungeonCard({ dungeon }: { dungeon: Dungeon }) {
               onComplete={(missionId) => completeDungeonMission(dungeon.id, missionId)}
             />
           ))}
-
-          {dungeon.isActive && progress === total && !dungeon.isCompleted && (
-            <button onClick={handleComplete} className="btn-primary w-full mt-2">
-              🏆 Reivindicar Recompensas
-            </button>
-          )}
 
           {dungeon.itemRewards.length > 0 && (
             <div className="mt-2">

@@ -2,11 +2,16 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { toast } from 'sonner'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import MissionCard from '@/components/missions/MissionCard'
 import { cn, generateId } from '@/lib/utils'
 import { MissionType, MissionCategory, MissionDifficulty } from '@/types/game'
+
+const TITLE_MAX_LENGTH = 60
+const DESCRIPTION_MAX_LENGTH = 150
+const TARGET_MAX = 999_999
 
 const TABS: { id: MissionType | 'all'; label: string; icon: string }[] = [
   { id: 'all', label: 'Todas', icon: '📋' },
@@ -54,22 +59,36 @@ function CreateMissionModal({ onClose }: { onClose: () => void }) {
   const catIcon = CATEGORY_OPTIONS.find(c => c.value === category)?.icon ?? '✅'
 
   function handleCreate() {
-    if (!title.trim()) return
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle) {
+      toast.error('Dê um título para a missão.')
+      return
+    }
+    if (trimmedTitle.length > TITLE_MAX_LENGTH) {
+      toast.error(`Título muito longo (máx. ${TITLE_MAX_LENGTH} caracteres).`)
+      return
+    }
+    if (description.trim().length > DESCRIPTION_MAX_LENGTH) {
+      toast.error(`Descrição muito longa (máx. ${DESCRIPTION_MAX_LENGTH} caracteres).`)
+      return
+    }
+    const clampedTarget = Math.min(TARGET_MAX, Math.max(1, parseInt(target, 10) || 1))
     addCustomMissions([{
       id: generateId(),
-      title: title.trim(),
+      title: trimmedTitle,
       description: description.trim() || 'Missão personalizada',
       category,
       type,
       icon: catIcon,
       xpReward: XP_MAP[difficulty],
       goldReward: GOLD_MAP[difficulty],
-      target: Math.max(1, parseInt(target, 10) || 1),
+      target: clampedTarget,
       unit: unit.trim() || 'vez',
       difficulty,
       status: 'active',
       progress: 0,
     }])
+    toast.success('Missão criada!')
     onClose()
   }
 
@@ -89,6 +108,7 @@ function CreateMissionModal({ onClose }: { onClose: () => void }) {
               className="w-full bg-[#080812] border border-[#1a1a2e] rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/60"
               placeholder="Nome da missão"
               value={title}
+              maxLength={TITLE_MAX_LENGTH}
               onChange={e => setTitle(e.target.value)}
             />
           </div>
@@ -99,6 +119,7 @@ function CreateMissionModal({ onClose }: { onClose: () => void }) {
               className="w-full bg-[#080812] border border-[#1a1a2e] rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/60"
               placeholder="Detalhes opcionais"
               value={description}
+              maxLength={DESCRIPTION_MAX_LENGTH}
               onChange={e => setDescription(e.target.value)}
             />
           </div>
@@ -169,6 +190,7 @@ function CreateMissionModal({ onClose }: { onClose: () => void }) {
               <input
                 type="number"
                 min="1"
+                max={TARGET_MAX}
                 className="w-full bg-[#080812] border border-[#1a1a2e] rounded-xl px-4 py-2.5 text-white text-sm outline-none focus:border-blue-500/60"
                 value={target}
                 onChange={e => setTarget(e.target.value)}

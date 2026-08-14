@@ -37,6 +37,7 @@ export default function OnboardingPage() {
     }
 
     setIsSubmitting(true)
+    const previousCharacter = useGameStore.getState().character
     try {
       setupCharacter(characterName, selectedClass)
       // Middleware only lets /dashboard through once this row exists —
@@ -45,7 +46,12 @@ export default function OnboardingPage() {
       toast.success('Personagem criado com sucesso! 🎉')
       router.push('/dashboard')
     } catch (err) {
-      toast.error('Erro ao criar personagem')
+      // Reverte o estado local: se o servidor não confirmou a criação, o gate
+      // de rotas (proxy.ts) continuará mandando o usuário pra /onboarding — manter
+      // isOnboarded=true aqui deixaria o cliente "achando" que tem personagem
+      // enquanto o servidor não tem nenhuma linha, travando o usuário em loop.
+      useGameStore.setState({ character: previousCharacter, isOnboarded: false })
+      toast.error('Erro ao criar personagem. Tente novamente.')
       console.error(err)
       setIsSubmitting(false)
     }
