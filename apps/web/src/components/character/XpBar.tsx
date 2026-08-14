@@ -1,6 +1,7 @@
 'use client'
 
 import { xpBarPercent } from '@/lib/utils'
+import { AnimatedNumber } from '@/components/ui'
 
 interface XpBarProps {
   current: number
@@ -20,7 +21,7 @@ export default function XpBar({ current, total, level, showLabels = true, size =
         <div className="flex justify-between items-center mb-1.5">
           <span className="text-xs text-gray-400 font-mono">EXP</span>
           <span className="text-xs text-cyan-400 font-mono">
-            {current.toLocaleString()} / {total.toLocaleString()}
+            <AnimatedNumber value={current} /> / {total.toLocaleString()}
           </span>
         </div>
       )}

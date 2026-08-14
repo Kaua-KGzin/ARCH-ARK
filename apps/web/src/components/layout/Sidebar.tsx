@@ -17,8 +17,20 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-[#1a1a2e]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-xl font-bold glow-blue">
-            ⚔
+          <div className="group relative w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-xl font-bold glow-blue overflow-hidden cursor-default">
+            <span className="relative z-10 group-hover:animate-glitch">⚔</span>
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 flex items-center justify-center text-red-500 opacity-0 transition-all duration-150 group-hover:opacity-70 group-hover:-translate-x-0.5"
+            >
+              ⚔
+            </span>
+            <span
+              aria-hidden="true"
+              className="absolute inset-0 flex items-center justify-center text-cyan-300 opacity-0 transition-all duration-150 group-hover:opacity-70 group-hover:translate-x-0.5"
+            >
+              ⚔
+            </span>
           </div>
           <div>
             <div className="text-white font-black text-lg tracking-wider">ARCH ARK</div>

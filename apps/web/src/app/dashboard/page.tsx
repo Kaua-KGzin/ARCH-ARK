@@ -5,7 +5,7 @@ import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import XpBar from '@/components/character/XpBar'
 import MissionCard from '@/components/missions/MissionCard'
-import { StatBox, Card, Avatar } from '@/components/ui'
+import { StatBox, Card, Avatar, AnimatedNumber } from '@/components/ui'
 import { getRankColor, getRankBgColor, getClassColor, getClassIcon, formatNumber, cn, isToday } from '@/lib/utils'
 import { generateLocalProphecy } from '@/lib/prophecy'
 import { calculateSecondaryStats } from '@/lib/xp'
@@ -88,16 +88,18 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex gap-4 flex-wrap">
-              {[
-                { label: 'Total XP', value: formatNumber(character.totalXp), color: 'text-cyan-400', icon: '⚡' },
-                { label: 'Sequência', value: `${character.streak}d`, color: 'text-orange-400', icon: '🔥' },
-                { label: 'Ouro', value: formatNumber(character.gold), color: 'text-yellow-400', icon: '💰' },
-              ].map(stat => (
-                <div key={stat.label} className="text-right">
-                  <div className="text-xs text-gray-500 mb-0.5">{stat.icon} {stat.label}</div>
-                  <div className={cn('text-xl font-black', stat.color)}>{stat.value}</div>
-                </div>
-              ))}
+              <div className="text-right">
+                <div className="text-xs text-gray-500 mb-0.5">⚡ Total XP</div>
+                <AnimatedNumber value={character.totalXp} format={formatNumber} className="text-xl font-black text-cyan-400" />
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-gray-500 mb-0.5">🔥 Sequência</div>
+                <AnimatedNumber value={character.streak} format={n => `${n}d`} className="text-xl font-black text-orange-400" />
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-gray-500 mb-0.5">💰 Ouro</div>
+                <AnimatedNumber value={character.gold} format={formatNumber} className="text-xl font-black text-yellow-400" />
+              </div>
             </div>
           </div>
 
