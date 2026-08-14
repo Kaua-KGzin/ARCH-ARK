@@ -5,7 +5,7 @@ import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import XpBar from '@/components/character/XpBar'
 import MissionCard from '@/components/missions/MissionCard'
-import { StatBox, Badge, Card, Button } from '@/components/ui'
+import { StatBox, Card, Avatar } from '@/components/ui'
 import { getRankColor, getRankBgColor, getClassColor, getClassIcon, formatNumber, cn, isToday } from '@/lib/utils'
 import { generateLocalProphecy } from '@/lib/prophecy'
 import { calculateSecondaryStats } from '@/lib/xp'
@@ -60,9 +60,13 @@ export default function DashboardPage() {
           <div className="relative flex items-start justify-between gap-6 flex-wrap">
             <div className="flex items-center gap-5">
               <div className="relative">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-900 to-purple-900 border-2 border-blue-500/30 flex items-center justify-center text-4xl glow-blue">
-                  {character.avatar}
-                </div>
+                <Avatar
+                  avatarUrl={character.avatarUrl}
+                  emoji={character.avatar}
+                  alt={character.name}
+                  className="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-900 to-purple-900 border-2 border-blue-500/30 glow-blue"
+                  emojiClassName="text-4xl"
+                />
                 <div className={cn(
                   'absolute -bottom-2 -right-2 text-xs font-black px-2 py-0.5 rounded-full border-2',
                   getRankBgColor(character.rank)

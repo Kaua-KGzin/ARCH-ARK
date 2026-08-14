@@ -5,6 +5,7 @@ import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import { createClient } from '@/lib/supabase/client'
 import { cn, getRankColor, getClassIcon, formatNumber } from '@/lib/utils'
+import { Avatar } from '@/components/ui'
 import type { CharacterClass, Rank } from '@/types/game'
 
 interface LeaderboardEntry {
@@ -15,6 +16,7 @@ interface LeaderboardEntry {
   xp: number
   rank_title: Rank
   avatar: string
+  avatarUrl: string | null
   streak: number
 }
 
@@ -39,6 +41,7 @@ export default function RankingPage() {
               xp: row.total_xp,
               rank_title: row.rank as Rank,
               avatar: row.avatar,
+              avatarUrl: row.avatar_url,
               streak: row.streak,
             }))
           )
@@ -58,6 +61,7 @@ export default function RankingPage() {
     xp: character.totalXp,
     rank_title: character.rank,
     avatar: character.avatar,
+    avatarUrl: character.avatarUrl ?? null,
     streak: character.streak,
   }
 
@@ -114,7 +118,13 @@ export default function RankingPage() {
                   )}
                 >
                   <div className="text-3xl mb-1">{TOP3_ICONS[i]}</div>
-                  <div className="text-2xl mb-1">{entry.avatar}</div>
+                  <Avatar
+                    avatarUrl={entry.avatarUrl}
+                    emoji={entry.avatar}
+                    alt={entry.name}
+                    className="w-10 h-10 rounded-full mx-auto mb-1"
+                    emojiClassName="text-2xl"
+                  />
                   <div className="text-white font-bold text-sm truncate">{entry.name}</div>
                   <div className={cn('text-xs font-bold', getRankColor(entry.rank_title))}>{entry.rank_title}</div>
                   <div className="text-xs text-gray-500 mt-1">{getClassIcon(entry.class)} Nv.{entry.level}</div>
@@ -149,7 +159,13 @@ export default function RankingPage() {
                       {i < 3 ? TOP3_ICONS[i] : `#${i + 1}`}
                     </div>
                     <div className="flex-1 flex items-center gap-3 min-w-0">
-                      <span className="text-xl">{entry.avatar}</span>
+                      <Avatar
+                        avatarUrl={entry.avatarUrl}
+                        emoji={entry.avatar}
+                        alt={entry.name}
+                        className="w-8 h-8 rounded-full"
+                        emojiClassName="text-xl"
+                      />
                       <div className="min-w-0">
                         <div className="text-white font-semibold text-sm truncate">{entry.name}</div>
                         <div className="flex items-center gap-1 text-xs">
@@ -171,7 +187,13 @@ export default function RankingPage() {
                   <div className="flex items-center gap-3 sm:gap-4 p-3 rounded-lg bg-blue-900/10 border border-blue-500/20">
                     <div className="w-8 sm:w-10 text-center font-black text-blue-400 flex-shrink-0">#{myPosition}</div>
                     <div className="flex-1 flex items-center gap-3">
-                      <span className="text-xl">{playerEntry.avatar}</span>
+                      <Avatar
+                        avatarUrl={playerEntry.avatarUrl}
+                        emoji={playerEntry.avatar}
+                        alt={playerEntry.name}
+                        className="w-8 h-8 rounded-full"
+                        emojiClassName="text-xl"
+                      />
                       <div>
                         <div className="text-white font-semibold text-sm">{playerEntry.name} <span className="text-xs text-blue-400">(você)</span></div>
                         <div className="flex items-center gap-1 text-xs">

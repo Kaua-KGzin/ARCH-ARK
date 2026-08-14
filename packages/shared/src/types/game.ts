@@ -35,6 +35,8 @@ export interface Character {
   id: string
   name: string
   avatar: string
+  /** URL de foto de perfil enviada pelo usuário (Supabase Storage). Quando ausente, usa `avatar` (emoji). */
+  avatarUrl?: string | null
   class: CharacterClass
   level: number
   currentXp: number
@@ -164,6 +166,7 @@ export interface RankingEntry {
   xp: number
   rank_title: Rank
   avatar: string
+  avatarUrl?: string | null
   streak: number
 }
 

@@ -4,6 +4,7 @@ import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
 import XpBar from '@/components/character/XpBar'
 import AttributeBar from '@/components/character/AttributeBar'
+import { Avatar } from '@/components/ui'
 import { getRankColor, getRankBgColor, getClassColor, getClassIcon, cn } from '@/lib/utils'
 import { calculateSecondaryStats } from '@/lib/xp'
 
@@ -41,9 +42,13 @@ export default function CharacterPage() {
           <div className="relative flex flex-col md:flex-row items-center gap-8">
             {/* Avatar */}
             <div className="relative flex-shrink-0">
-              <div className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-900 to-purple-900 border-2 border-blue-500/30 flex items-center justify-center text-6xl glow-blue animate-float">
-                {character.avatar}
-              </div>
+              <Avatar
+                avatarUrl={character.avatarUrl}
+                emoji={character.avatar}
+                alt={character.name}
+                className="w-32 h-32 rounded-2xl bg-gradient-to-br from-blue-900 to-purple-900 border-2 border-blue-500/30 glow-blue animate-float"
+                emojiClassName="text-6xl"
+              />
               <div className={cn(
                 'absolute -bottom-3 left-1/2 -translate-x-1/2 text-xs font-black px-3 py-1 rounded-full border-2 whitespace-nowrap',
                 getRankBgColor(character.rank)

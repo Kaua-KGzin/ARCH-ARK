@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -10,6 +10,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useAuth } from '@/hooks/useAuth'
 import GameLayout from '@/components/layout/GameLayout'
 import { useGameStore } from '@/store/useGameStore'
+import { Avatar } from '@/components/ui'
+import { uploadAvatar, validateAvatarFile, removeAvatar } from '@/lib/supabase/avatar-upload'
 
 function errorMessage(err: unknown, fallback: string) {
   return err instanceof Error ? err.message : fallback
@@ -18,14 +20,53 @@ function errorMessage(err: unknown, fallback: string) {
 export default function ProfilePage() {
   const router = useRouter()
   const { user } = useAuth()
-  const { character } = useGameStore()
+  const { character, setCharacter } = useGameStore()
   const [currentTab, setCurrentTab] = useState<'info' | 'security' | 'preferences'>('info')
   const [isEditing, setIsEditing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const avatarInputRef = useRef<HTMLInputElement>(null)
 
   const [newEmail, setNewEmail] = useState(user?.email || '')
   const [newPassword, setNewPassword] = useState('')
   const [confirmNewPassword, setConfirmNewPassword] = useState('')
+
+  const handleAvatarSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !user) return
+
+    const validationError = validateAvatarFile(file)
+    if (validationError) {
+      toast.error(validationError)
+      return
+    }
+
+    setIsUploadingAvatar(true)
+    try {
+      const url = await uploadAvatar(createClient(), user.id, file)
+      setCharacter({ ...character, avatarUrl: url })
+      toast.success('Foto de perfil atualizada!')
+    } catch (err) {
+      toast.error(errorMessage(err, 'Erro ao enviar a foto'))
+    } finally {
+      setIsUploadingAvatar(false)
+    }
+  }
+
+  const handleRemoveAvatar = async () => {
+    if (!user || !character.avatarUrl) return
+    setIsUploadingAvatar(true)
+    try {
+      await removeAvatar(createClient(), user.id, character.avatarUrl)
+      setCharacter({ ...character, avatarUrl: null })
+      toast.success('Foto removida.')
+    } catch (err) {
+      toast.error(errorMessage(err, 'Erro ao remover a foto'))
+    } finally {
+      setIsUploadingAvatar(false)
+    }
+  }
 
   const handleUpdateEmail = async () => {
     if (!newEmail.includes('@')) {
@@ -121,8 +162,42 @@ export default function ProfilePage() {
             className="bg-slate-900/80 border border-cyan-500/30 rounded-2xl p-6 backdrop-blur-xl"
           >
             <div className="text-center mb-4">
-              <div className="text-6xl mb-2">{character.avatar}</div>
-              <h2 className="text-2xl font-black text-white">{character.name}</h2>
+              <div className="relative inline-block">
+                <Avatar
+                  avatarUrl={character.avatarUrl}
+                  emoji={character.avatar}
+                  alt={character.name}
+                  className="w-24 h-24 rounded-full border-2 border-cyan-500/40 bg-gradient-to-br from-blue-900 to-purple-900 mx-auto mb-2"
+                  emojiClassName="text-5xl"
+                />
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={isUploadingAvatar}
+                  title="Trocar foto"
+                  className="absolute bottom-2 right-0 w-8 h-8 rounded-full bg-cyan-500 text-slate-950 flex items-center justify-center text-sm border-2 border-slate-900 hover:bg-cyan-400 transition-all disabled:opacity-50"
+                >
+                  {isUploadingAvatar ? '⏳' : '📷'}
+                </button>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  className="hidden"
+                  onChange={handleAvatarSelect}
+                />
+              </div>
+              {character.avatarUrl && (
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  disabled={isUploadingAvatar}
+                  className="text-xs text-red-400/70 hover:text-red-400 transition-all disabled:opacity-50"
+                >
+                  Remover foto
+                </button>
+              )}
+              <h2 className="text-2xl font-black text-white mt-1">{character.name}</h2>
               <p className="text-sm text-slate-400">{character.class}</p>
             </div>
 

@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useGameStore } from '@/store/useGameStore'
 import { cn, xpBarPercent, getRankColor } from '@/lib/utils'
+import { Avatar } from '@/components/ui'
 import { NAV_ITEMS } from './nav-items'
 
 export default function Sidebar() {
@@ -29,9 +30,12 @@ export default function Sidebar() {
       {/* Character Mini Card */}
       <div className="p-4 border-b border-[#1a1a2e]">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-900 to-purple-900 border border-blue-500/30 flex items-center justify-center text-xl">
-            {character.avatar}
-          </div>
+          <Avatar
+            avatarUrl={character.avatarUrl}
+            emoji={character.avatar}
+            alt={character.name}
+            className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-900 to-purple-900 border border-blue-500/30"
+          />
           <div className="flex-1 min-w-0">
             <div className="text-white font-semibold text-sm truncate">{character.name}</div>
             <div className="flex items-center gap-2">

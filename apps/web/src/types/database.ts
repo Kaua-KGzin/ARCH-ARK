@@ -43,6 +43,7 @@ export type Database = {
         Row: {
           attributes: Json
           avatar: string
+          avatar_url: string | null
           class: string
           created_at: string
           current_xp: number
@@ -67,6 +68,7 @@ export type Database = {
         Insert: {
           attributes?: Json
           avatar?: string
+          avatar_url?: string | null
           class: string
           created_at?: string
           current_xp?: number
@@ -91,6 +93,7 @@ export type Database = {
         Update: {
           attributes?: Json
           avatar?: string
+          avatar_url?: string | null
           class?: string
           created_at?: string
           current_xp?: number
@@ -141,6 +144,7 @@ export type Database = {
         Args: { limit_count?: number }
         Returns: {
           avatar: string
+          avatar_url: string
           character_id: string
           class: string
           level: number

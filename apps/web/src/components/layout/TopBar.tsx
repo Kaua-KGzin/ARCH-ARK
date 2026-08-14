@@ -1,6 +1,7 @@
 'use client'
 
 import { useGameStore } from '@/store/useGameStore'
+import { Avatar } from '@/components/ui'
 
 export default function TopBar({ title }: { title: string }) {
   const { character } = useGameStore()
@@ -23,9 +24,13 @@ export default function TopBar({ title }: { title: string }) {
           <span>⚡</span>
           <span className="text-neon-cyan font-mono font-semibold">{character.totalXp.toLocaleString()} XP</span>
         </div>
-        <div className="w-7 h-7 md:w-8 md:h-8 rounded-none bg-black-bg border-2 border-neon-cyan flex items-center justify-center text-sm md:text-base shadow-neon-cyan">
-          {character.avatar}
-        </div>
+        <Avatar
+          avatarUrl={character.avatarUrl}
+          emoji={character.avatar}
+          alt={character.name}
+          className="w-7 h-7 md:w-8 md:h-8 rounded-none bg-black-bg border-2 border-neon-cyan shadow-neon-cyan"
+          emojiClassName="text-sm md:text-base"
+        />
       </div>
     </header>
   )
