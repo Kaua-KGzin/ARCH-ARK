@@ -18,5 +18,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: '/achievements', label: 'Conquistas', icon: '🏆' },
   { href: '/ranking', label: 'Ranking', icon: '📊' },
   { href: '/stats', label: 'Estatísticas', icon: '📈' },
+  { href: '/calendar', label: 'Calendário', icon: '🗓️' },
   { href: '/settings', label: 'Configurações', icon: '⚙️' },
 ]

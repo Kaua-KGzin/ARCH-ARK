@@ -506,7 +506,7 @@ export function createGameStore(options: GameStoreOptions = {}) {
             const updatedDungeons = state.dungeons.map(d => {
               if (d.id !== dungeonId) return d
               const updatedMissions = d.missions.map(m =>
-                m.id === missionId ? { ...m, status: 'completed' as const } : m
+                m.id === missionId ? { ...m, status: 'completed' as const, completedAt: new Date().toISOString() } : m
               )
               const allDone = updatedMissions.every(m => m.status === 'completed')
               return { ...d, missions: updatedMissions, isCompleted: allDone, progress: updatedMissions.filter(m => m.status === 'completed').length }
@@ -577,7 +577,7 @@ export function createGameStore(options: GameStoreOptions = {}) {
             const updatedBosses = state.bosses.map(b => {
               if (b.id !== bossId) return b
               const updatedMissions = b.missions.map(m =>
-                m.id === missionId ? { ...m, status: 'completed' as const } : m
+                m.id === missionId ? { ...m, status: 'completed' as const, completedAt: new Date().toISOString() } : m
               )
               const completedCount = updatedMissions.filter(m => m.status === 'completed').length
               const hpPerMission = b.maxHp / b.missions.length
